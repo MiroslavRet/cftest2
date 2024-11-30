@@ -14,11 +14,11 @@
 
 ![Support Campaign Diagram 1](https://github.com/user-attachments/assets/58a1dc8d-32ec-4244-8af5-528312fac3df)
 
-![Campaign Script Address UTXOs](https://github.com/user-attachments/assets/efde8769-bb9a-4672-a940-1348055f9899)
+![Campaign Script Address UTxOs](https://github.com/user-attachments/assets/fae077ae-2404-4a11-80eb-ed8d0f283bab)
 
 ![Support Campaign Diagram 2](https://github.com/user-attachments/assets/79adc8d6-475f-4ded-b348-29baaa58b98b)
 
-![Campaign Script Address UTXOs](https://github.com/user-attachments/assets/dc75b112-20a0-4299-8a89-c0f2d673694f)
+![Campaign Script Address UTxOs](https://github.com/user-attachments/assets/48b2d7d3-6fbb-4196-bd95-e8079d12581c)
 
 ## Cancel Campaign
 
@@ -28,7 +28,7 @@
 
 ![Cancel Campaign Diagram 2](https://github.com/user-attachments/assets/31798a27-fb69-4b73-8e23-e69d071b122b)
 
-![Campaign Script Address UTXOs](https://github.com/user-attachments/assets/84eda18e-9b1d-40f0-a90e-ece693a8b5e8)
+![Campaign Script Address UTxOs](https://github.com/user-attachments/assets/9f24ba84-aa66-4eea-ab24-f5d7006de48f)
 
 ## Finish Campaign
 
@@ -38,7 +38,7 @@
 
 ![Finish Campaign Diagram 2](https://github.com/user-attachments/assets/68affc4b-e057-4b01-807e-c67084148835)
 
-![Campaign Script Address UTXOs](https://github.com/user-attachments/assets/d4b5a113-5114-4e07-bee3-663c954ec18a)
+![Campaign Script Address UTxOs](https://github.com/user-attachments/assets/7253a13d-d6d1-470e-9b25-6c564bf3fc25)
 
 ## Refund Campaign
 
@@ -50,6 +50,6 @@
 
 ![When There's No Datum Rules](https://github.com/user-attachments/assets/844cc7fb-d7b0-439f-8fff-9a658e7e9c6f)
 
-![Campaign Script UTXOs](https://github.com/user-attachments/assets/962cd9bd-455b-4c3d-8477-322110a46a85)
+![Campaign Script Address UTxOs](https://github.com/user-attachments/assets/1cc5722a-cff8-4fd2-8e53-a39a9682833e)
 
 ![When There's No Datum Diagram](https://github.com/user-attachments/assets/a2413b22-e169-4efb-a6f5-ff1d9a65caec)
