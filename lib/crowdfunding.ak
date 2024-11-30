@@ -223,7 +223,7 @@ fn must_reach_goal_and_send_to_creator(
   // helper fn to sum TxOutputs Lovelace sent to creator
   let sum_creator =
     fn(sum, Output { address, value, .. }) {
-      if creator_address == address {
+      if address == creator_address {
         assets.lovelace_of(value) + sum
       } else {
         sum
