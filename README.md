@@ -42,7 +42,7 @@
 
 ## Refund Campaign
 
-![Refund Campaign Rules](https://github.com/user-attachments/assets/b91ad620-695b-4971-b877-45556d06f0d5)
+![Refund Campaign Rules](https://github.com/user-attachments/assets/fc20680b-948b-4695-83cc-74b8c275702e)
 
 ![Refund Campaign Diagram](https://github.com/user-attachments/assets/6e420318-7f60-4de9-9ebe-1266552c4e32)
 
