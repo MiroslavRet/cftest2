@@ -1,3 +1,4 @@
+use aiken/collection/list
 use cardano/assets
 use cardano/transaction.{InlineDatum, OutputReference}
 use crowdfunding
@@ -48,35 +49,16 @@ test no_datum_positive_cancelled_campaign() {
       |> add_tx_output(tx_output)
       |> add_signatory(platform_pkh)
 
-  and {
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Cancel,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Finish,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Refund,
-      no_datum_o_ref,
-      tx,
-    ),
-  }
+  let redeemer <- list.all([Cancel, Finish, Refund])
+  crowdfunding.validate_spend_campaign(
+    platform_pkh,
+    creator_pkh,
+    campaign_nonce,
+    None,
+    redeemer,
+    no_datum_o_ref,
+    tx,
+  )
 }
 
 test no_datum_positive_finished_campaign() {
@@ -112,35 +94,16 @@ test no_datum_positive_finished_campaign() {
       |> add_tx_output(tx_output)
       |> add_signatory(platform_pkh)
 
-  and {
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Cancel,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Finish,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Refund,
-      no_datum_o_ref,
-      tx,
-    ),
-  }
+  let redeemer <- list.all([Cancel, Finish, Refund])
+  crowdfunding.validate_spend_campaign(
+    platform_pkh,
+    creator_pkh,
+    campaign_nonce,
+    None,
+    redeemer,
+    no_datum_o_ref,
+    tx,
+  )
 }
 
 // ## Negative Tests
@@ -178,35 +141,16 @@ test no_datum_negative_running_campaign() fail {
       |> add_tx_output(tx_output)
       |> add_signatory(platform_pkh)
 
-  or {
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Cancel,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Finish,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Refund,
-      no_datum_o_ref,
-      tx,
-    ),
-  }
+  let redeemer <- list.any([Cancel, Finish, Refund])
+  crowdfunding.validate_spend_campaign(
+    platform_pkh,
+    creator_pkh,
+    campaign_nonce,
+    None,
+    redeemer,
+    no_datum_o_ref,
+    tx,
+  )
 }
 
 test no_datum_negative_no_campaign_state_token_in_reference_input() fail {
@@ -242,35 +186,16 @@ test no_datum_negative_no_campaign_state_token_in_reference_input() fail {
       |> add_tx_output(tx_output)
       |> add_signatory(platform_pkh)
 
-  or {
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Cancel,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Finish,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Refund,
-      no_datum_o_ref,
-      tx,
-    ),
-  }
+  let redeemer <- list.any([Cancel, Finish, Refund])
+  crowdfunding.validate_spend_campaign(
+    platform_pkh,
+    creator_pkh,
+    campaign_nonce,
+    None,
+    redeemer,
+    no_datum_o_ref,
+    tx,
+  )
 }
 
 test no_datum_negative_does_not_refer_state_token_utxo() fail {
@@ -304,35 +229,16 @@ test no_datum_negative_does_not_refer_state_token_utxo() fail {
       |> add_tx_output(tx_output)
       |> add_signatory(platform_pkh)
 
-  or {
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Cancel,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Finish,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Refund,
-      no_datum_o_ref,
-      tx,
-    ),
-  }
+  let redeemer <- list.any([Cancel, Finish, Refund])
+  crowdfunding.validate_spend_campaign(
+    platform_pkh,
+    creator_pkh,
+    campaign_nonce,
+    None,
+    redeemer,
+    no_datum_o_ref,
+    tx,
+  )
 }
 
 test no_datum_negative_not_signed_by_platform() fail {
@@ -368,33 +274,14 @@ test no_datum_negative_not_signed_by_platform() fail {
       |> add_tx_output(tx_output)
 
   //   |> add_signatory(platform_pkh)
-  and {
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Cancel,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Finish,
-      no_datum_o_ref,
-      tx,
-    ),
-    crowdfunding.validate_spend_campaign(
-      platform_pkh,
-      creator_pkh,
-      campaign_nonce,
-      None,
-      Refund,
-      no_datum_o_ref,
-      tx,
-    ),
-  }
+  let redeemer <- list.any([Cancel, Finish, Refund])
+  crowdfunding.validate_spend_campaign(
+    platform_pkh,
+    creator_pkh,
+    campaign_nonce,
+    None,
+    redeemer,
+    no_datum_o_ref,
+    tx,
+  )
 }
