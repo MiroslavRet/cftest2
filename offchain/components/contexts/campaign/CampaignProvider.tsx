@@ -10,6 +10,10 @@ export default function CampaignProvider(props: { children: React.ReactNode }) {
         switch (actionType) {
           case "Store":
             return nextState;
+
+          case "Clear":
+            return undefined;
+
           default:
             return currState;
         }

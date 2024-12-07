@@ -33,7 +33,7 @@ export default function Creator() {
       </div>
 
       <div className="mt-4">
-        <CreatorDashboard />{" "}
+        <CreatorDashboard />
       </div>
 
       <ToastContainer theme="dark" position="bottom-right" />

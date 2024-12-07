@@ -1,7 +1,17 @@
 import { createContext, Dispatch, useContext } from "react";
 
-import { Address, Credential, OutRef, PaymentKeyHash, PolicyId, Unit, UTxO, Validator } from "@lucid-evolution/lucid";
+import { Address, Credential, Lovelace, OutRef, PaymentKeyHash, PolicyId, StakeKeyHash, Unit, UTxO, Validator } from "@lucid-evolution/lucid";
 import { CampaignDatum, CampaignState } from "@/types/crowdfunding";
+
+export type BackerUTxO = {
+  utxo: UTxO;
+  pkh: PaymentKeyHash;
+  skh?: StakeKeyHash;
+  pk: Credential;
+  sk?: Credential;
+  address: Address;
+  support: { lovelace: Lovelace; ada: number };
+};
 
 export type CampaignUTxO = {
   CampaignInfo: {
@@ -15,7 +25,8 @@ export type CampaignUTxO = {
       name: string;
       goal: number;
       deadline: Date;
-      creator: { pk: Credential; sk: Credential; address: Address };
+      creator: { pk: Credential; sk?: Credential; address: Address };
+      backers: BackerUTxO[];
       state: CampaignState;
     };
   };
@@ -26,8 +37,8 @@ export type CampaignUTxO = {
 };
 
 export type CampaignDispatchAction = {
-  actionType: "Store";
-  nextState: CampaignUTxO;
+  actionType: "Store" | "Clear";
+  nextState?: CampaignUTxO;
 };
 
 export const CampaignContext = createContext<[CampaignUTxO | undefined, Dispatch<CampaignDispatchAction>]>([, () => {}]);

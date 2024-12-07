@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useWallet } from "./contexts/wallet/WalletContext";
+import { BackerUTxO, useCampaign } from "./contexts/campaign/CampaignContext";
+import { BackerDatum, CampaignDatum } from "@/types/crowdfunding";
+import { STATE_TOKEN } from "@/config/crowdfunding";
 
 import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
+import { Spinner } from "@nextui-org/spinner";
+
+import { handleError } from "./utils";
 import { koios } from "./koios";
 import {
   applyParamsToScript,
@@ -15,12 +22,8 @@ import {
   Validator,
   validatorToAddress,
 } from "@lucid-evolution/lucid";
-import { STATE_TOKEN } from "@/config/crowdfunding";
-import { script } from "@/config/script";
 import { network } from "@/config/lucid";
-import { useWallet } from "./contexts/wallet/WalletContext";
-import { CampaignDatum } from "@/types/crowdfunding";
-import { useCampaign } from "./contexts/campaign/CampaignContext";
+import { script } from "@/config/script";
 
 export default function InputCampaignId() {
   const router = useRouter();
@@ -29,8 +32,10 @@ export default function InputCampaignId() {
   const [, processCampaignUTxO] = useCampaign();
 
   const [campaignId, setCampaignId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  async function submit() {
+  async function queryAndProcessCampaign() {
+    //#region Campaign Info
     const campaign = await koios.getTokenMetadata(campaignId);
     const { platform, creator, hash, index } = campaign[campaignId].STATE_TOKEN;
     const StateTokenUnit = toUnit(campaignId, STATE_TOKEN.hex); // `${PolicyID}${AssetName}`
@@ -44,6 +49,7 @@ export default function InputCampaignId() {
       script: applyParamsToScript(script.Crowdfunding, [platform, creator, nonceORef]),
     };
     const campaignAddress = validatorToAddress(network, campaignValidator);
+    //#endregion
 
     if (!lucid) throw "Uninitialized Lucid";
     const [StateTokenUTxO] = await lucid.utxosAtWithUnit(campaignAddress, StateTokenUnit);
@@ -51,10 +57,33 @@ export default function InputCampaignId() {
 
     const campaignDatum = Data.from(StateTokenUTxO.datum, CampaignDatum);
 
+    //#region Creator Info
     const [creatorPkh, creatorSkh] = campaignDatum.creator;
     const creatorPk = keyHashToCredential(creatorPkh);
     const creatorSk = keyHashToCredential(creatorSkh);
     const creatorAddress = credentialToAddress(network, creatorPk, creatorSk);
+    //#endregion
+
+    //#region Backers Info
+    const utxos = await lucid.utxosAt(campaignAddress);
+    const backers: BackerUTxO[] = [];
+    for (const utxo of utxos) {
+      if (!utxo.datum) continue;
+      try {
+        const [pkh, skh] = Data.from(utxo.datum, BackerDatum);
+        const backerPk = keyHashToCredential(pkh);
+        const backerSk = skh ? keyHashToCredential(skh) : undefined;
+        const backerAddress = credentialToAddress(network, backerPk, backerSk);
+
+        const supportLovelace = utxo.assets.lovelace;
+        const supportADA = parseFloat(`${supportLovelace / 1_000000n}.${supportLovelace % 1_000000n}`);
+
+        backers.push({ utxo, pkh, skh, pk: backerPk, sk: backerSk, address: backerAddress, support: { lovelace: supportLovelace, ada: supportADA } });
+      } catch {
+        continue;
+      }
+    }
+    //#endregion
 
     processCampaignUTxO({
       actionType: "Store",
@@ -71,6 +100,7 @@ export default function InputCampaignId() {
             goal: parseFloat(`${campaignDatum.goal / 1_000000n}.${campaignDatum.goal % 1_000000n}`),
             deadline: new Date(parseInt(campaignDatum.deadline.toString())),
             creator: { pk: creatorPk, sk: creatorSk, address: creatorAddress },
+            backers,
             state: campaignDatum.state,
           },
         },
@@ -83,25 +113,53 @@ export default function InputCampaignId() {
     router.push(creatorAddress === address ? "/creator" : "/backer");
   }
 
+  async function submit() {
+    const loader = document.getElementById("loader") as HTMLDialogElement;
+    loader.showModal();
+    setIsLoading(true);
+    queryAndProcessCampaign()
+      .catch(handleError)
+      .finally(() => {
+        try {
+          loader.close();
+        } finally {
+          setIsLoading(false);
+        }
+      });
+  }
+
   function ButtonGo() {
     return (
-      <Button onClick={submit} color={campaignId ? "primary" : "default"} isDisabled={!campaignId} size="sm" variant="ghost">
-        Go
-      </Button>
+      <div className="relative">
+        <Button
+          onClick={submit}
+          className={isLoading ? "invisible" : ""}
+          color={campaignId ? "primary" : "default"}
+          isDisabled={!campaignId}
+          size="sm"
+          variant="ghost"
+        >
+          Go
+        </Button>
+        {isLoading && <Spinner className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
+      </div>
     );
   }
 
   return (
-    <Input
-      onKeyDown={(e) => {
-        if (campaignId && e.code === "Enter") submit();
-      }}
-      onValueChange={setCampaignId}
-      endContent={<ButtonGo />}
-      className="w-96"
-      label="Enter Campaign ID"
-      variant="bordered"
-      radius="sm"
-    />
+    <>
+      <Input
+        onKeyDown={(e) => {
+          if (campaignId && !isLoading && e.code === "Enter") submit();
+        }}
+        onValueChange={setCampaignId}
+        endContent={<ButtonGo />}
+        className="w-96"
+        label="Enter Campaign ID"
+        variant="bordered"
+        radius="sm"
+      />
+      <dialog id="loader" />
+    </>
   );
 }

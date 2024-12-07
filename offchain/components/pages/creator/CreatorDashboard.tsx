@@ -1,22 +1,27 @@
+import { useCampaign } from "@/components/contexts/campaign/CampaignContext";
+import ButtonCreateCampaign from "@/components/ButtonCreateCampaign";
+import ButtonCancelCampaign from "@/components/ButtonCancelCampaign";
+import ButtonFinishCampaign from "@/components/ButtonFinishCampaign";
+
+import { title } from "@/components/primitives";
 import { Badge } from "@nextui-org/badge";
-import { Button } from "@nextui-org/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@nextui-org/card";
 import { Divider } from "@nextui-org/divider";
 import { Slider } from "@nextui-org/slider";
 import { Snippet } from "@nextui-org/snippet";
-
-import ButtonCreateCampaign from "@/components/ButtonCreateCampaign";
-
-import { title } from "@/components/primitives";
-import { useCampaign } from "@/components/contexts/campaign/CampaignContext";
 
 export default function CreatorDashboard() {
   const [campaignUTxO] = useCampaign();
   if (!campaignUTxO) return <ButtonCreateCampaign />;
 
   const { CampaignInfo, StateToken } = campaignUTxO;
+
+  const supportLovelace = CampaignInfo.data.backers.reduce((sum, { support }) => sum + support.lovelace, 0n);
+  const supportADA = parseFloat(`${supportLovelace / 1_000000n}.${supportLovelace % 1_000000n}`);
+
   return (
     <Badge
+      // Campaign State: Running | Cancelled | Finished
       variant="shadow"
       className="!-top-1.5 !-right-3 animate-bounce"
       showOutline={false}
@@ -24,31 +29,41 @@ export default function CreatorDashboard() {
       color={
         CampaignInfo.data.state === "Running"
           ? "primary"
-          : CampaignInfo.data.state === "Finished"
-            ? "success"
-            : CampaignInfo.data.state === "Cancelled"
-              ? "danger"
+          : CampaignInfo.data.state === "Cancelled"
+            ? "danger"
+            : CampaignInfo.data.state === "Finished"
+              ? "success"
               : "default"
       }
     >
-      <Card>
+      <Card id="campaign">
+        {/* Campaign Info: Name, Deadline, Goal */}
         <CardHeader className="flex gap-3 w-full">
           <div className="flex flex-col gap-1 w-full">
             <p className={title({ size: "sm" })}>{CampaignInfo.data.name}</p>
             <p className="text-medium text-default-500">
-              {`Deadline: ${CampaignInfo.data.deadline.toDateString()} ${CampaignInfo.data.deadline.toLocaleTimeString()}`}
+              <label htmlFor="deadline">Deadline: </label>
+              <span id="deadline">
+                {CampaignInfo.data.deadline.toDateString()} ${CampaignInfo.data.deadline.toLocaleTimeString()}
+              </span>
             </p>
             <Slider
               label="Goal"
               showTooltip={true}
               tooltipProps={{
-                content: Intl.NumberFormat(navigator.languages, { style: "currency", currency: "ADA" }).format(0), // TODO: currValue (sum_support)
+                content: Intl.NumberFormat(navigator.languages, { style: "currency", currency: "ADA" }).format(supportADA),
                 placement: "bottom",
                 offset: 1.5,
               }}
               formatOptions={{ style: "currency", currency: "ADA" }}
               value={CampaignInfo.data.goal} // goal
-              maxValue={Number.POSITIVE_INFINITY} // TODO: goal / currValue
+              maxValue={
+                supportADA === 0
+                  ? Number.POSITIVE_INFINITY
+                  : supportADA > CampaignInfo.data.goal
+                    ? CampaignInfo.data.goal
+                    : CampaignInfo.data.goal ** 2 / supportADA
+              }
               minValue={0}
               renderThumb={(props) => (
                 // <div {...props} className="p-1 top-1/2 bg-primary rounded-full">
@@ -62,6 +77,8 @@ export default function CreatorDashboard() {
             />
           </div>
         </CardHeader>
+
+        {/* Campaign ID */}
         <Divider />
         <CardBody>
           <label htmlFor="campaign-id" className="text-sm mt-2">
@@ -71,12 +88,22 @@ export default function CreatorDashboard() {
             {CampaignInfo.id}
           </Snippet>
         </CardBody>
-        <Divider />
-        <CardFooter className="flex justify-end">
-          <Button onPress={() => {}} isDisabled={false} color="danger" variant="flat">
-            Cancel Campaign
-          </Button>
-        </CardFooter>
+
+        {/* Campaign Actions: Cancel | Finish */}
+        {CampaignInfo.data.state === "Running" && (
+          <>
+            <Divider />
+            <CardFooter className="flex justify-end">
+              {supportADA < CampaignInfo.data.goal ? (
+                // Goal not reached yet? Creator can cancel the campaign:
+                <ButtonCancelCampaign />
+              ) : (
+                // Goal reached? Creator may finish the campaign, even earlier than the deadline:
+                <ButtonFinishCampaign />
+              )}
+            </CardFooter>
+          </>
+        )}
       </Card>
     </Badge>
   );

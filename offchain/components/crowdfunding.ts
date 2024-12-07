@@ -137,6 +137,7 @@ export async function createCampaign(
         goal: parseFloat(`${campaign.goal / 1_000000n}.${campaign.goal % 1_000000n}`),
         deadline: new Date(parseInt(campaign.deadline.toString())),
         creator: { pk: keyHashToCredential(creator.pkh ?? ""), sk: keyHashToCredential(creator.skh ?? ""), address: creator.address ?? "" },
+        backers: [],
         state: "Running",
       },
     },
