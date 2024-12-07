@@ -18,7 +18,7 @@ import { Spinner } from "@nextui-org/spinner";
 export default function ButtonCreateCampaign() {
   const router = useRouter();
   const [walletConnection] = useWallet();
-  const [, processCampaignUTxO] = useCampaign();
+  const [, processCampaign] = useCampaign();
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -169,10 +169,10 @@ export default function ButtonCreateCampaign() {
                     onPress={() => {
                       setIsSubmittingTx(true);
                       createCampaign(walletConnection, { name: campaignName, goal, deadline })
-                        .then((campaignUTxO) => {
-                          processCampaignUTxO({
+                        .then((campaign) => {
+                          processCampaign({
                             actionType: "Store",
-                            nextState: campaignUTxO,
+                            nextState: campaign,
                           });
                           router.push("/creator");
                         })

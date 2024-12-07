@@ -11,10 +11,10 @@ import { Slider } from "@nextui-org/slider";
 import { Snippet } from "@nextui-org/snippet";
 
 export default function CreatorDashboard() {
-  const [campaignUTxO] = useCampaign();
-  if (!campaignUTxO) return <ButtonCreateCampaign />;
+  const [campaign] = useCampaign();
+  if (!campaign) return <ButtonCreateCampaign />;
 
-  const { CampaignInfo, StateToken } = campaignUTxO;
+  const { CampaignInfo, StateToken } = campaign;
 
   const supportLovelace = CampaignInfo.data.backers.reduce((sum, { support }) => sum + support.lovelace, 0n);
   const supportADA = parseFloat(`${supportLovelace / 1_000000n}.${supportLovelace % 1_000000n}`);

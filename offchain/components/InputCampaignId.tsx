@@ -29,7 +29,7 @@ export default function InputCampaignId() {
   const router = useRouter();
 
   const [{ lucid, address }] = useWallet();
-  const [, processCampaignUTxO] = useCampaign();
+  const [, processCampaign] = useCampaign();
 
   const [campaignId, setCampaignId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -85,7 +85,7 @@ export default function InputCampaignId() {
     }
     //#endregion
 
-    processCampaignUTxO({
+    processCampaign({
       actionType: "Store",
       nextState: {
         CampaignInfo: {
@@ -117,15 +117,11 @@ export default function InputCampaignId() {
     const loader = document.getElementById("loader") as HTMLDialogElement;
     loader.showModal();
     setIsLoading(true);
-    queryAndProcessCampaign()
-      .catch(handleError)
-      .finally(() => {
-        try {
-          loader.close();
-        } finally {
-          setIsLoading(false);
-        }
-      });
+    queryAndProcessCampaign().catch((error) => {
+      loader.close();
+      setIsLoading(false);
+      handleError(error);
+    });
   }
 
   function ButtonGo() {

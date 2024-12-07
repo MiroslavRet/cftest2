@@ -17,9 +17,9 @@ import { network } from "@/config/lucid";
 import { script } from "@/config/script";
 import { STATE_TOKEN } from "@/config/crowdfunding";
 import { WalletConnection } from "./contexts/wallet/WalletContext";
-import { CampaignDatum, CampaignState } from "@/types/crowdfunding";
-import { handleSuccess } from "./utils";
 import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
+import { CampaignActionRedeemer, CampaignDatum, CampaignState } from "@/types/crowdfunding";
+import { handleSuccess } from "./utils";
 
 async function submitTx(tx: TxSignBuilder) {
   const txSigned = await tx.sign.withWallet().complete();
@@ -74,7 +74,6 @@ export async function createCampaign(
 
   const StateTokenUnit = toUnit(campaignPolicy, STATE_TOKEN.hex); // `${PolicyID}${AssetName}`
   const StateToken = { [StateTokenUnit]: 1n };
-  console.log(StateToken);
 
   //#region Temp CBOR Serialize/Deserializing
   const campaignDatum: CampaignDatum = {
@@ -151,5 +150,35 @@ export async function createCampaign(
         datum: mintRedeemer,
       },
     },
+  };
+}
+
+export async function cancelCampaign({ lucid }: WalletConnection, campaign?: CampaignUTxO): Promise<CampaignUTxO> {
+  if (!lucid) throw "Unitialized Lucid";
+  if (!campaign) throw "No Campaign";
+
+  const { CampaignInfo, StateToken } = campaign;
+
+  const newState: CampaignState = "Cancelled";
+  const updatedDatum: CampaignDatum = {
+    ...CampaignInfo.datum,
+    state: newState,
+  };
+  const datum = Data.to(updatedDatum, CampaignDatum);
+
+  const tx = await lucid
+    .newTx()
+    .collectFrom([StateToken.utxo], CampaignActionRedeemer.Cancel)
+    .attach.SpendingValidator(CampaignInfo.validator)
+    .pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n })
+    .addSigner(CampaignInfo.data.creator.address)
+    .complete({ localUPLCEval: false });
+
+  const txHash = await submitTx(tx);
+  handleSuccess(`Cancel Campaign TxHash: ${txHash}`);
+
+  return {
+    CampaignInfo: { ...CampaignInfo, datum: updatedDatum, data: { ...CampaignInfo.data, state: newState } },
+    StateToken: { ...StateToken, utxo: { ...StateToken.utxo, txHash, outputIndex: 0, datum } },
   };
 }
