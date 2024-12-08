@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
+
 import { title } from "@/components/primitives";
+import { Link } from "@nextui-org/link";
 
 import AdminPanel from "@/components/pages/admin/AdminPanel";
 
@@ -31,8 +33,9 @@ export default function Admin() {
         </h1>
       </div>
 
-      <div className="mt-4">
+      <div className="flex flex-col items-center gap-4 mt-4">
         <AdminPanel />
+        <Link href="/">&laquo; Go Back</Link>
       </div>
 
       <ToastContainer theme="dark" position="bottom-right" />

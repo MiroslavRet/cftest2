@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
+
 import { title } from "@/components/primitives";
+import { Link } from "@nextui-org/link";
 
 import CreatorDashboard from "@/components/pages/creator/CreatorDashboard";
 
@@ -31,8 +33,9 @@ export default function Creator() {
         </h1>
       </div>
 
-      <div className="mt-4">
+      <div className="flex flex-col items-center gap-4 mt-4">
         <CreatorDashboard />
+        <Link href="/">&laquo; Go Back</Link>
       </div>
 
       <ToastContainer theme="dark" position="bottom-right" />
