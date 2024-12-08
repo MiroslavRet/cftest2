@@ -1,6 +1,6 @@
 import { useWallet } from "./contexts/wallet/WalletContext";
 import { useCampaign } from "./contexts/campaign/CampaignContext";
-import { cancelCampaign } from "./crowdfunding";
+import { finishCampaign } from "./crowdfunding";
 import ActionButton from "./ActionButton";
 
 export default function ButtonFinishCampaign() {
@@ -10,7 +10,7 @@ export default function ButtonFinishCampaign() {
   return (
     <ActionButton
       actionLabel="Finish Campaign"
-      campaignAction={() => cancelCampaign(walletConnection, campaign)} // TODO: finishCampaign()
+      campaignAction={() => finishCampaign(walletConnection, campaign)}
       buttonColor="success"
       buttonVariant="shadow"
     />

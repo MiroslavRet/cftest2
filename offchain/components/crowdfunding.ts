@@ -220,6 +220,11 @@ export async function supportCampaign(
   const ada = parseFloat(support);
   const lovelace = adaToLovelace(support);
 
+  if (!lucid.wallet()) {
+    const api = await wallet.enable();
+    lucid.selectWallet.fromAPI(api);
+  }
+
   const tx = await lucid.newTx().pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { lovelace }).complete();
 
   const txHash = await submitTx(tx);
@@ -246,5 +251,44 @@ export async function supportCampaign(
         support: { ada: CampaignInfo.data.support.ada + ada, lovelace: CampaignInfo.data.support.lovelace + lovelace },
       },
     },
+  };
+}
+
+export async function finishCampaign({ lucid, wallet }: WalletConnection, campaign?: CampaignUTxO): Promise<CampaignUTxO> {
+  if (!lucid) throw "Unitialized Lucid";
+  if (!wallet) throw "Disconnected Wallet";
+  if (!campaign) throw "No Campaign";
+
+  const { CampaignInfo, StateToken } = campaign;
+
+  const [StateTokenUTxO] = await lucid.utxosAtWithUnit(CampaignInfo.address, StateToken.unit);
+
+  const newState: CampaignState = "Finished";
+  const updatedDatum: CampaignDatum = {
+    ...CampaignInfo.datum,
+    state: newState,
+  };
+  const datum = Data.to(updatedDatum, CampaignDatum);
+
+  if (!lucid.wallet()) {
+    const api = await wallet.enable();
+    lucid.selectWallet.fromAPI(api);
+  }
+
+  const tx = await lucid
+    .newTx()
+    .collectFrom([StateTokenUTxO, ...CampaignInfo.data.backers.map(({ utxo }) => utxo)], CampaignActionRedeemer.Finish)
+    .attach.SpendingValidator(CampaignInfo.validator)
+    .pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n })
+    .pay.ToAddress(CampaignInfo.data.creator.address, { lovelace: CampaignInfo.data.support.lovelace })
+    .addSigner(CampaignInfo.data.creator.address)
+    .complete({ localUPLCEval: false });
+
+  const txHash = await submitTx(tx);
+  handleSuccess(`Finish Campaign TxHash: ${txHash}`);
+
+  return {
+    CampaignInfo: { ...CampaignInfo, datum: updatedDatum, data: { ...CampaignInfo.data, state: newState, backers: [], support: { ada: 0, lovelace: 0n } } },
+    StateToken: { ...StateToken, utxo: { ...StateTokenUTxO, txHash, outputIndex: 0, datum } },
   };
 }

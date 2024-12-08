@@ -39,7 +39,7 @@ export default function CampaignCard(props: { campaign: CampaignUTxO; hasActions
             </p>
             <Slider
               label="Goal"
-              showTooltip={true}
+              showTooltip={CampaignInfo.data.state !== "Finished"}
               tooltipProps={{
                 content: Intl.NumberFormat(navigator.languages, { style: "currency", currency: "ADA" }).format(CampaignInfo.data.support.ada),
                 placement: "bottom",
@@ -48,11 +48,11 @@ export default function CampaignCard(props: { campaign: CampaignUTxO; hasActions
               formatOptions={{ style: "currency", currency: "ADA" }}
               value={CampaignInfo.data.goal} // goal
               maxValue={
-                CampaignInfo.data.support.ada === 0
-                  ? Number.POSITIVE_INFINITY
-                  : CampaignInfo.data.support.ada > CampaignInfo.data.goal
-                    ? CampaignInfo.data.goal
-                    : CampaignInfo.data.goal ** 2 / CampaignInfo.data.support.ada
+                CampaignInfo.data.state === "Finished" || CampaignInfo.data.support.ada > CampaignInfo.data.goal
+                  ? CampaignInfo.data.goal
+                  : CampaignInfo.data.support.ada > 0
+                    ? CampaignInfo.data.goal ** 2 / CampaignInfo.data.support.ada
+                    : Number.POSITIVE_INFINITY
               }
               minValue={0}
               renderThumb={(props) => (
