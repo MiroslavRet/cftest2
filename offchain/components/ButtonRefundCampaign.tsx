@@ -1,6 +1,6 @@
 import { useWallet } from "./contexts/wallet/WalletContext";
 import { useCampaign } from "./contexts/campaign/CampaignContext";
-import { cancelCampaign } from "./crowdfunding";
+import { refundCampaign } from "./crowdfunding";
 import ActionButton from "./ActionButton";
 
 export default function ButtonRefundCampaign() {
@@ -8,7 +8,6 @@ export default function ButtonRefundCampaign() {
   const [campaign] = useCampaign();
 
   return (
-    // TODO: refundCampaign()
-    <ActionButton actionLabel="Refund Campaign" campaignAction={() => cancelCampaign(walletConnection, campaign)} buttonColor="warning" buttonVariant="flat" />
+    <ActionButton actionLabel="Refund Campaign" campaignAction={() => refundCampaign(walletConnection, campaign)} buttonColor="warning" buttonVariant="flat" />
   );
 }

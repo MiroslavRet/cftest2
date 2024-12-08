@@ -292,3 +292,49 @@ export async function finishCampaign({ lucid, wallet }: WalletConnection, campai
     StateToken: { ...StateToken, utxo: { ...StateTokenUTxO, txHash, outputIndex: 0, datum } },
   };
 }
+
+export async function refundCampaign({ lucid, wallet, address }: WalletConnection, campaign?: CampaignUTxO): Promise<CampaignUTxO> {
+  if (!lucid) throw "Unitialized Lucid";
+  if (!wallet) throw "Disconnected Wallet";
+  if (!address) throw "No Address";
+  if (!campaign) throw "No Campaign";
+
+  const { CampaignInfo, StateToken } = campaign;
+  if (!CampaignInfo.data.support.ada) throw "Nothing to Refund";
+
+  const currentBacker = CampaignInfo.data.backers.filter((backer) => backer.address === address);
+  const backerADA = currentBacker.reduce((sum, { support }) => sum + support.ada, 0);
+  if (!backerADA) throw "You did not support this campaign, or you're already refunded. Incorrect? Contact us!";
+  const backerLovelace = adaToLovelace(`${backerADA}`);
+
+  if (!lucid.wallet()) {
+    const api = await wallet.enable();
+    lucid.selectWallet.fromAPI(api);
+  }
+
+  const tx = await lucid
+    .newTx()
+    .readFrom([StateToken.utxo])
+    .collectFrom(
+      currentBacker.map(({ utxo }) => utxo),
+      CampaignActionRedeemer.Refund
+    )
+    .attach.SpendingValidator(CampaignInfo.validator)
+    .pay.ToAddress(address, { lovelace: backerLovelace })
+    .complete({ localUPLCEval: false });
+
+  const txHash = await submitTx(tx);
+  handleSuccess(`Refund Campaign TxHash: ${txHash}`);
+
+  return {
+    ...campaign,
+    CampaignInfo: {
+      ...CampaignInfo,
+      data: {
+        ...CampaignInfo.data,
+        backers: CampaignInfo.data.backers.filter((backer) => backer.address !== address),
+        support: { ada: CampaignInfo.data.support.ada - backerADA, lovelace: CampaignInfo.data.support.lovelace - backerLovelace },
+      },
+    },
+  };
+}
