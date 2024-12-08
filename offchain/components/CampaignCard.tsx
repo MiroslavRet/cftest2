@@ -35,9 +35,7 @@ export default function CampaignCard(props: { campaign: CampaignUTxO; hasActions
             <p className={title({ size: "sm" })}>{CampaignInfo.data.name}</p>
             <p className="text-medium text-default-500">
               <label htmlFor="deadline">Deadline: </label>
-              <span id="deadline">
-                {CampaignInfo.data.deadline.toDateString()} ${CampaignInfo.data.deadline.toLocaleTimeString()}
-              </span>
+              <span id="deadline">{`${CampaignInfo.data.deadline.toDateString()} ${CampaignInfo.data.deadline.toLocaleTimeString()}`}</span>
             </p>
             <Slider
               label="Goal"

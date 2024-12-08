@@ -45,10 +45,11 @@ function getShortestUTxO(utxos: UTxO[]) {
 }
 
 export async function createCampaign(
-  { lucid, address, pkh, stakeAddress, skh }: WalletConnection,
+  { lucid, wallet, address, pkh, stakeAddress, skh }: WalletConnection,
   campaign: { name: string; goal: Lovelace; deadline: bigint }
 ): Promise<CampaignUTxO> {
   if (!lucid) throw "Unitialized Lucid";
+  if (!wallet) throw "Disconnected Wallet";
 
   const crowdfundingPlatform = localStorage.getItem("CrowdfundingPlatform");
   if (!crowdfundingPlatform) throw "Go to Admin page to set the Crowdfunding Platform Address first!";
@@ -56,6 +57,11 @@ export async function createCampaign(
   const platform = JSON.parse(crowdfundingPlatform); // Platform { address, pkh, stakeAddress, skh }
   const creator = { address, pkh, stakeAddress, skh };
   if (!creator.address && !creator.pkh && creator.stakeAddress && !creator.skh) throw "Unconnected Wallet";
+
+  if (!lucid.wallet()) {
+    const api = await wallet.enable();
+    lucid.selectWallet.fromAPI(api);
+  }
 
   const utxos = await lucid.wallet().getUtxos();
   if (!utxos || !utxos.length) throw "Empty Wallet";
@@ -154,11 +160,14 @@ export async function createCampaign(
   };
 }
 
-export async function cancelCampaign({ lucid }: WalletConnection, campaign?: CampaignUTxO): Promise<CampaignUTxO> {
+export async function cancelCampaign({ lucid, wallet }: WalletConnection, campaign?: CampaignUTxO): Promise<CampaignUTxO> {
   if (!lucid) throw "Unitialized Lucid";
+  if (!wallet) throw "Disconnected Wallet";
   if (!campaign) throw "No Campaign";
 
   const { CampaignInfo, StateToken } = campaign;
+
+  const [StateTokenUTxO] = await lucid.utxosAtWithUnit(CampaignInfo.address, StateToken.unit);
 
   const newState: CampaignState = "Cancelled";
   const updatedDatum: CampaignDatum = {
@@ -167,9 +176,14 @@ export async function cancelCampaign({ lucid }: WalletConnection, campaign?: Cam
   };
   const datum = Data.to(updatedDatum, CampaignDatum);
 
+  if (!lucid.wallet()) {
+    const api = await wallet.enable();
+    lucid.selectWallet.fromAPI(api);
+  }
+
   const tx = await lucid
     .newTx()
-    .collectFrom([StateToken.utxo], CampaignActionRedeemer.Cancel)
+    .collectFrom([StateTokenUTxO], CampaignActionRedeemer.Cancel)
     .attach.SpendingValidator(CampaignInfo.validator)
     .pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n })
     .addSigner(CampaignInfo.data.creator.address)
@@ -180,6 +194,6 @@ export async function cancelCampaign({ lucid }: WalletConnection, campaign?: Cam
 
   return {
     CampaignInfo: { ...CampaignInfo, datum: updatedDatum, data: { ...CampaignInfo.data, state: newState } },
-    StateToken: { ...StateToken, utxo: { ...StateToken.utxo, txHash, outputIndex: 0, datum } },
+    StateToken: { ...StateToken, utxo: { ...StateTokenUTxO, txHash, outputIndex: 0, datum } },
   };
 }

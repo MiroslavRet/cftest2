@@ -1,9 +1,18 @@
-import { Button } from "@nextui-org/button";
+import { useWallet } from "./contexts/wallet/WalletContext";
+import { useCampaign } from "./contexts/campaign/CampaignContext";
+import { cancelCampaign } from "./crowdfunding";
+import ActionButton from "./ActionButton";
 
 export default function ButtonFinishCampaign() {
+  const [walletConnection] = useWallet();
+  const [campaign] = useCampaign();
+
   return (
-    <Button onPress={() => {}} isDisabled={false} color="success" variant="shadow">
-      Finish Campaign
-    </Button>
+    <ActionButton
+      actionLabel="Finish Campaign"
+      campaignAction={() => cancelCampaign(walletConnection, campaign)} // TODO: finishCampaign()
+      buttonColor="success"
+      buttonVariant="shadow"
+    />
   );
 }
