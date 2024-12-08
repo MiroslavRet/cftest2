@@ -3,6 +3,8 @@ import { createContext, Dispatch, useContext } from "react";
 import { Address, Credential, Lovelace, OutRef, PaymentKeyHash, PolicyId, StakeKeyHash, Unit, UTxO, Validator } from "@lucid-evolution/lucid";
 import { CampaignDatum, CampaignState } from "@/types/crowdfunding";
 
+export type Support = { lovelace: Lovelace; ada: number };
+
 export type BackerUTxO = {
   utxo: UTxO;
   pkh: PaymentKeyHash;
@@ -10,7 +12,7 @@ export type BackerUTxO = {
   pk: Credential;
   sk?: Credential;
   address: Address;
-  support: { lovelace: Lovelace; ada: number };
+  support: Support;
 };
 
 export type CampaignUTxO = {
@@ -27,6 +29,7 @@ export type CampaignUTxO = {
       deadline: Date;
       creator: { pk: Credential; sk?: Credential; address: Address };
       backers: BackerUTxO[];
+      support: Support;
       state: CampaignState;
     };
   };

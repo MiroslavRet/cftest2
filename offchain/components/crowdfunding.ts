@@ -137,6 +137,7 @@ export async function createCampaign(
         deadline: new Date(parseInt(campaign.deadline.toString())),
         creator: { pk: keyHashToCredential(creator.pkh ?? ""), sk: keyHashToCredential(creator.skh ?? ""), address: creator.address ?? "" },
         backers: [],
+        support: { lovelace: 0n, ada: 0 },
         state: "Running",
       },
     },

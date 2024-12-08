@@ -33,9 +33,8 @@ export default function AdminPanel() {
   return (
     <>
       <Input
-        autoFocus
-        isRequired
         isClearable
+        variant="bordered"
         className="w-[768px]"
         label="Platform Address"
         placeholder="addr1_..."

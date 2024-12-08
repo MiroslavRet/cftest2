@@ -85,6 +85,8 @@ export default function InputCampaignId() {
     }
     //#endregion
 
+    const supportLovelace = backers.reduce((sum, { support }) => sum + support.lovelace, 0n);
+    const supportADA = parseFloat(`${supportLovelace / 1_000000n}.${supportLovelace % 1_000000n}`);
     processCampaign({
       actionType: "Store",
       nextState: {
@@ -101,6 +103,7 @@ export default function InputCampaignId() {
             deadline: new Date(parseInt(campaignDatum.deadline.toString())),
             creator: { pk: creatorPk, sk: creatorSk, address: creatorAddress },
             backers,
+            support: { lovelace: supportLovelace, ada: supportADA },
             state: campaignDatum.state,
           },
         },

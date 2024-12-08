@@ -111,20 +111,12 @@ export default function ButtonCreateCampaign() {
               <ModalBody>
                 {/* Campaign Name */}
                 <Skeleton isLoaded={!!blockTime} className="rounded-xl">
-                  <Input
-                    autoFocus
-                    isRequired
-                    isDisabled={isSubmittingTx}
-                    label="Campaign Name"
-                    placeholder="Enter campaign name"
-                    onValueChange={setCampaignName}
-                  />
+                  <Input autoFocus isDisabled={isSubmittingTx} label="Campaign Name" placeholder="Enter campaign name" onValueChange={setCampaignName} />
                 </Skeleton>
 
                 {/* Campaign Goal */}
                 <Skeleton isLoaded={!!blockTime} className="rounded-xl">
                   <Input
-                    isRequired
                     type="number"
                     label="Campaign Goal"
                     placeholder="0.000000"
@@ -147,7 +139,6 @@ export default function ButtonCreateCampaign() {
                     label="Set Deadline"
                     hideTimeZone
                     isDisabled={isSubmittingTx}
-                    isRequired
                     showMonthAndYearPickers
                     defaultValue={now(timezone)}
                     minValue={blockTime}

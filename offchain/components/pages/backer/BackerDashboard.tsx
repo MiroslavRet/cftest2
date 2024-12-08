@@ -2,28 +2,28 @@ import { useWallet } from "@/components/contexts/wallet/WalletContext";
 import { useCampaign } from "@/components/contexts/campaign/CampaignContext";
 
 import CampaignCard from "@/components/CampaignCard";
-import ButtonCreateCampaign from "@/components/ButtonCreateCampaign";
-import ButtonCancelCampaign from "@/components/ButtonCancelCampaign";
-import ButtonFinishCampaign from "@/components/ButtonFinishCampaign";
+import InputCampaignId from "@/components/InputCampaignId";
+import ButtonRefundCampaign from "@/components/ButtonRefundCampaign";
+import ButtonSupportCampaign from "@/components/ButtonSupportCampaign";
 
-export default function CreatorDashboard() {
+export default function BackerDashboard() {
   const [{ address }] = useWallet();
   const [campaign] = useCampaign();
-  if (!campaign || campaign.CampaignInfo.data.creator.address !== address) return <ButtonCreateCampaign />;
+  if (!campaign || campaign.CampaignInfo.data.creator.address === address) return <InputCampaignId />;
 
   const { CampaignInfo } = campaign;
   return (
     <CampaignCard
       campaign={campaign}
-      hasActions={CampaignInfo.data.state === "Running"}
+      hasActions={true}
       actionButtons={
         <>
-          {CampaignInfo.data.support.ada < CampaignInfo.data.goal ? (
+          {CampaignInfo.data.state === "Running" ? (
             // Goal not reached yet? Creator can cancel the campaign:
-            <ButtonCancelCampaign />
+            <ButtonSupportCampaign />
           ) : (
             // Goal reached? Creator may finish the campaign, even earlier than the deadline:
-            <ButtonFinishCampaign />
+            <ButtonRefundCampaign />
           )}
         </>
       }

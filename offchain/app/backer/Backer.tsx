@@ -3,13 +3,13 @@ import { useRouter } from "next/navigation";
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
 import { title } from "@/components/primitives";
 
-import CreatorDashboard from "@/components/pages/creator/CreatorDashboard";
+import BackerDashboard from "@/components/pages/backer/BackerDashboard";
 
 import DisconnectButton from "@/components/pages/DisconnectButton";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function Creator() {
+export default function Backer() {
   const router = useRouter();
   const [{ address }] = useWallet();
 
@@ -27,12 +27,12 @@ export default function Creator() {
       {/* Title */}
       <div className="inline-block max-w-lg text-center justify-center">
         <h1 className={title()}>
-          <span className={title({ color: "violet" })}>Creator</span> Dashboard
+          <span className={title({ color: "violet" })}>Backer</span> Dashboard
         </h1>
       </div>
 
       <div className="mt-4">
-        <CreatorDashboard />
+        <BackerDashboard />
       </div>
 
       <ToastContainer theme="dark" position="bottom-right" />
