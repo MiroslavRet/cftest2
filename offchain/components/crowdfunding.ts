@@ -18,8 +18,8 @@ import { script } from "@/config/script";
 import { STATE_TOKEN } from "@/config/crowdfunding";
 import { WalletConnection } from "./contexts/wallet/WalletContext";
 import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
-import { CampaignActionRedeemer, CampaignDatum, CampaignState } from "@/types/crowdfunding";
-import { handleSuccess } from "./utils";
+import { BackerDatum, CampaignActionRedeemer, CampaignDatum, CampaignState } from "@/types/crowdfunding";
+import { adaToLovelace, handleSuccess } from "./utils";
 
 async function submitTx(tx: TxSignBuilder) {
   const txSigned = await tx.sign.withWallet().complete();
@@ -195,5 +195,56 @@ export async function cancelCampaign({ lucid, wallet }: WalletConnection, campai
   return {
     CampaignInfo: { ...CampaignInfo, datum: updatedDatum, data: { ...CampaignInfo.data, state: newState } },
     StateToken: { ...StateToken, utxo: { ...StateTokenUTxO, txHash, outputIndex: 0, datum } },
+  };
+}
+
+export async function supportCampaign(
+  { lucid, wallet, pkh, skh, address }: WalletConnection,
+  campaign?: CampaignUTxO,
+  supportADA?: string
+): Promise<CampaignUTxO> {
+  if (!lucid) throw "Unitialized Lucid";
+  if (!wallet) throw "Disconnected Wallet";
+  if (!address) throw "No Address";
+  if (!campaign) throw "No Campaign";
+
+  const { CampaignInfo } = campaign;
+
+  const backerPKH = pkh ?? "";
+  const backerSKH = skh ?? "";
+
+  const backer: BackerDatum = [backerPKH, backerSKH];
+  const datum = Data.to(backer, BackerDatum);
+
+  const support = supportADA ?? "0";
+  const ada = parseFloat(support);
+  const lovelace = adaToLovelace(support);
+
+  const tx = await lucid.newTx().pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { lovelace }).complete();
+
+  const txHash = await submitTx(tx);
+  handleSuccess(`Support Campaign TxHash: ${txHash}`);
+
+  return {
+    ...campaign,
+    CampaignInfo: {
+      ...CampaignInfo,
+      data: {
+        ...CampaignInfo.data,
+        backers: [
+          ...CampaignInfo.data.backers,
+          {
+            address,
+            pkh: backerPKH,
+            skh: backerPKH,
+            pk: keyHashToCredential(backerPKH),
+            sk: keyHashToCredential(backerSKH),
+            support: { ada, lovelace },
+            utxo: { txHash, outputIndex: 0, address: CampaignInfo.address, assets: { lovelace }, datum },
+          },
+        ],
+        support: { ada: CampaignInfo.data.support.ada + ada, lovelace: CampaignInfo.data.support.lovelace + lovelace },
+      },
+    },
   };
 }

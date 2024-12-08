@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
 import { useCampaign } from "./contexts/campaign/CampaignContext";
 import { createCampaign } from "@/components/crowdfunding";
-import { handleError } from "@/components/utils";
+import { adaToLovelace, handleError } from "@/components/utils";
 import { koios } from "@/components/koios";
 
 import { fromAbsolute, getLocalTimeZone, now, ZonedDateTime } from "@internationalized/date";
@@ -51,8 +51,7 @@ export default function ButtonCreateCampaign() {
   useEffect(() => {
     setGoal(() => {
       try {
-        const [ada, lovelace] = campaignGoal.split(".");
-        return BigInt(ada) * 1_000000n + BigInt(lovelace || 0);
+        return adaToLovelace(campaignGoal);
       } catch {
         return 0n;
       }

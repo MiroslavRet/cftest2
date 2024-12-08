@@ -123,7 +123,11 @@ export default function InputCampaignId() {
     queryAndProcessCampaign().catch((error) => {
       loader.close();
       setIsLoading(false);
-      handleError(error);
+      handleError(
+        "Cannot read properties of undefined (reading 'minting_tx_metadata')" === error.message
+          ? "Cannot find Campaign ID (the campaign might be just created, please try again later)"
+          : error
+      );
     });
   }
 

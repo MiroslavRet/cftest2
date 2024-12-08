@@ -40,3 +40,8 @@ export function handleError(error: any) {
   toast(`${failureInfo ?? failureMessage ?? info ?? message ?? error}`, { type: "error" });
   console.error(failureCause ?? { error });
 }
+
+export function adaToLovelace(float: string) {
+  const [ada, lovelace] = float.split(".");
+  return BigInt(ada) * 1_000000n + BigInt(lovelace || 0);
+}
