@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 
 export async function req(path: string, req?: RequestInit) {
-  const rsp = await fetch(path, req);
+  const rsp = await fetch(path, { ...req, cache: "no-cache" });
   if (!rsp.ok) {
     throw {
       code: rsp.status,
