@@ -2,11 +2,14 @@ import { koios } from "./koios";
 import {
   applyParamsToScript,
   Constr,
+  credentialToAddress,
   Data,
   fromText,
   keyHashToCredential,
   Lovelace,
   mintingPolicyToId,
+  PolicyId,
+  toText,
   toUnit,
   TxSignBuilder,
   UTxO,
@@ -17,7 +20,7 @@ import { network } from "@/config/lucid";
 import { script } from "@/config/script";
 import { STATE_TOKEN } from "@/config/crowdfunding";
 import { WalletConnection } from "./contexts/wallet/WalletContext";
-import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
+import { BackerUTxO, CampaignUTxO } from "./contexts/campaign/CampaignContext";
 import { BackerDatum, CampaignActionRedeemer, CampaignDatum, CampaignState } from "@/types/crowdfunding";
 import { adaToLovelace, handleSuccess } from "./utils";
 
@@ -42,6 +45,91 @@ function getShortestUTxO(utxos: UTxO[]) {
   }
 
   return utxo;
+}
+
+export async function queryCampaign({ lucid, wallet }: WalletConnection, campaignPolicyId: PolicyId): Promise<CampaignUTxO> {
+  if (!lucid) throw "Uninitialized Lucid";
+  if (!wallet) throw "Disconnected Wallet";
+
+  //#region Campaign Info
+  const campaign = await koios.getTokenMetadata(campaignPolicyId);
+  const { platform, creator, hash, index } = campaign[campaignPolicyId].STATE_TOKEN;
+  const StateTokenUnit = toUnit(campaignPolicyId, STATE_TOKEN.hex); // `${PolicyID}${AssetName}`
+
+  const nonceTxHash = String(hash);
+  const nonceTxIdx = BigInt(index);
+  const nonceORef = new Constr(0, [nonceTxHash, nonceTxIdx]);
+
+  const campaignValidator: Validator = {
+    type: "PlutusV3",
+    script: applyParamsToScript(script.Crowdfunding, [platform, creator, nonceORef]),
+  };
+  const campaignAddress = validatorToAddress(network, campaignValidator);
+  //#endregion
+
+  const [StateTokenUTxO] = await lucid.utxosAtWithUnit(campaignAddress, StateTokenUnit);
+  if (!StateTokenUTxO.datum) throw "No Datum";
+
+  const campaignDatum = Data.from(StateTokenUTxO.datum, CampaignDatum);
+
+  //#region Creator Info
+  const [creatorPkh, creatorSkh] = campaignDatum.creator;
+  const creatorPk = keyHashToCredential(creatorPkh);
+  const creatorSk = keyHashToCredential(creatorSkh);
+  const creatorAddress = credentialToAddress(network, creatorPk, creatorSk);
+  //#endregion
+
+  if (!lucid.wallet()) {
+    const api = await wallet.enable();
+    lucid.selectWallet.fromAPI(api);
+  }
+
+  //#region Backers Info
+  const utxos = await lucid.utxosAt(campaignAddress);
+  const backers: BackerUTxO[] = [];
+  for (const utxo of utxos) {
+    if (!utxo.datum) continue;
+    try {
+      const [pkh, skh] = Data.from(utxo.datum, BackerDatum);
+      const backerPk = keyHashToCredential(pkh);
+      const backerSk = skh ? keyHashToCredential(skh) : undefined;
+      const backerAddress = credentialToAddress(network, backerPk, backerSk);
+
+      const supportLovelace = utxo.assets.lovelace;
+      const supportADA = parseFloat(`${supportLovelace / 1_000000n}.${supportLovelace % 1_000000n}`);
+
+      backers.push({ utxo, pkh, skh, pk: backerPk, sk: backerSk, address: backerAddress, support: { lovelace: supportLovelace, ada: supportADA } });
+    } catch {
+      continue;
+    }
+  }
+  //#endregion
+
+  const supportLovelace = backers.reduce((sum, { support }) => sum + support.lovelace, 0n);
+  const supportADA = parseFloat(`${supportLovelace / 1_000000n}.${supportLovelace % 1_000000n}`);
+  return {
+    CampaignInfo: {
+      id: campaignPolicyId,
+      platform: { pkh: platform },
+      nonce: { txHash: hash, outputIndex: index },
+      validator: campaignValidator,
+      address: campaignAddress,
+      datum: campaignDatum,
+      data: {
+        name: toText(campaignDatum.name),
+        goal: parseFloat(`${campaignDatum.goal / 1_000000n}.${campaignDatum.goal % 1_000000n}`),
+        deadline: new Date(parseInt(campaignDatum.deadline.toString())),
+        creator: { pk: creatorPk, sk: creatorSk, address: creatorAddress },
+        backers,
+        support: { lovelace: supportLovelace, ada: supportADA },
+        state: campaignDatum.state,
+      },
+    },
+    StateToken: {
+      unit: StateTokenUnit,
+      utxo: StateTokenUTxO,
+    },
+  };
 }
 
 export async function createCampaign(

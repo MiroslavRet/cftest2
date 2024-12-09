@@ -1,4 +1,7 @@
+import { useRouter } from "next/navigation";
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
+
+import { handleError } from "@/components/utils";
 import { title } from "@/components/primitives";
 
 import { Snippet } from "@nextui-org/snippet";
@@ -7,6 +10,7 @@ import InputCampaignId from "../../InputCampaignId";
 import ButtonCreateCampaign from "../../ButtonCreateCampaign";
 
 export default function ConnectedDashboard() {
+  const router = useRouter();
   const [{ wallet, address }] = useWallet();
 
   return (
@@ -26,7 +30,10 @@ export default function ConnectedDashboard() {
       {/* Choice */}
       <Snippet hideCopyButton hideSymbol className="w-fit mx-auto mt-8 pt-3 pb-4">
         <div className="flex flex-col items-center">
-          <InputCampaignId />
+          <InputCampaignId
+            onSuccess={({ CampaignInfo }) => router.push(CampaignInfo.data.creator.address === address ? "/creator" : "/backer")}
+            onError={handleError}
+          />
           <span className="my-2">or</span>
           <ButtonCreateCampaign />
         </div>
