@@ -26,13 +26,18 @@ export default function InputCampaignId(props: { onSuccess: (campaign: CampaignU
         onSuccess(campaign);
       })
       .catch((error) => {
-        loader.close();
-        setIsLoading(false);
         onError(
           "Cannot read properties of undefined (reading 'minting_tx_metadata')" === error.message
             ? "Cannot find Campaign ID (the campaign might be just created, please try again later)"
             : error
         );
+      })
+      .finally(() => {
+        try {
+          loader.close();
+        } finally {
+          setIsLoading(false);
+        }
       });
   }
 

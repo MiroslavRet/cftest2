@@ -8,10 +8,11 @@ import { Spinner } from "@nextui-org/spinner";
 export default function ActionButton(props: {
   actionLabel: string;
   campaignAction: () => Promise<CampaignUTxO>;
+  callback?: (campaign: CampaignUTxO) => void;
   buttonColor?: "danger" | "default" | "primary" | "secondary" | "success" | "warning";
   buttonVariant?: "flat" | "solid" | "bordered" | "light" | "faded" | "shadow" | "ghost";
 }) {
-  const { actionLabel, campaignAction, buttonColor, buttonVariant } = props;
+  const { actionLabel, campaignAction, callback, buttonColor, buttonVariant } = props;
 
   const [, processCampaign] = useCampaign();
 
@@ -25,12 +26,13 @@ export default function ActionButton(props: {
           loader.showModal();
           setIsSubmittingTx(true);
           campaignAction()
-            .then((campaign) =>
+            .then((campaign) => {
               processCampaign({
                 actionType: "Store",
                 nextState: campaign,
-              })
-            )
+              });
+              if (callback) callback(campaign);
+            })
             .catch(handleError)
             .finally(() => {
               setIsSubmittingTx(false);

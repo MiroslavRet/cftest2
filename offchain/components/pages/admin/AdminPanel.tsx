@@ -1,11 +1,28 @@
+import { useState } from "react";
+import { useWallet } from "@/components/contexts/wallet/WalletContext";
+import { toast } from "react-toastify";
+import { handleError } from "@/components/utils";
+import { CampaignUTxO } from "@/components/contexts/campaign/CampaignContext";
+import { Platform } from "@/types/platform";
+
+import { Accordion, AccordionItem } from "@nextui-org/accordion";
 import { Input } from "@nextui-org/input";
+import InputCampaignId from "@/components/InputCampaignId";
+import CampaignCard from "@/components/CampaignCard";
+import ButtonCancelCampaign from "@/components/ButtonCancelCampaign";
+import ButtonFinishCampaign from "@/components/ButtonFinishCampaign";
+import ButtonRefundCampaign from "@/components/ButtonRefundCampaign";
+
 import { Address, credentialToRewardAddress, getAddressDetails } from "@lucid-evolution/lucid";
 import { network } from "@/config/lucid";
-import { toast } from "react-toastify";
 
 export default function AdminPanel() {
+  const [{ address }] = useWallet();
+
   const crowdfundingPlatform = localStorage.getItem("CrowdfundingPlatform");
-  const platform = crowdfundingPlatform ? JSON.parse(crowdfundingPlatform) : {};
+  const platform: Platform = crowdfundingPlatform ? JSON.parse(crowdfundingPlatform) : {};
+
+  const [campaign, setCampaign] = useState<CampaignUTxO>();
 
   function setPlatformData(address: Address) {
     if (!address) {
@@ -31,7 +48,8 @@ export default function AdminPanel() {
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
+      {/* Platform Address */}
       <Input
         isClearable
         variant="bordered"
@@ -41,6 +59,39 @@ export default function AdminPanel() {
         defaultValue={platform.address}
         onValueChange={setPlatformData}
       />
-    </>
+
+      {address === platform.address && (
+        <Accordion variant="bordered">
+          {/* Query Campaign */}
+          <AccordionItem key="query-campaign" aria-label="Query Campaign" title="Query Campaign">
+            {/* Input Campaign ID */}
+            <div className="mb-3">
+              <InputCampaignId onSuccess={setCampaign} onError={handleError} />
+            </div>
+
+            {/* Campaign Card */}
+            {campaign && (
+              <div className="mb-1.5">
+                <CampaignCard
+                  campaign={campaign}
+                  hasActions={new Date() > campaign.CampaignInfo.data.deadline}
+                  actionButtons={
+                    campaign.CampaignInfo.data.state === "Running" ? (
+                      campaign.CampaignInfo.data.support.ada < campaign.CampaignInfo.data.goal ? (
+                        <ButtonCancelCampaign platform={platform} callback={setCampaign} />
+                      ) : (
+                        <ButtonFinishCampaign platform={platform} callback={setCampaign} />
+                      )
+                    ) : (
+                      <ButtonRefundCampaign platform={platform} callback={setCampaign} />
+                    )
+                  }
+                />
+              </div>
+            )}
+          </AccordionItem>
+        </Accordion>
+      )}
+    </div>
   );
 }

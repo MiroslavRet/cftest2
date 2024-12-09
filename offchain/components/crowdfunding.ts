@@ -19,10 +19,11 @@ import {
 import { network } from "@/config/lucid";
 import { script } from "@/config/script";
 import { STATE_TOKEN } from "@/config/crowdfunding";
+import { BackerDatum, CampaignActionRedeemer, CampaignDatum, CampaignState } from "@/types/crowdfunding";
+import { Platform } from "@/types/platform";
+import { adaToLovelace, handleSuccess } from "./utils";
 import { WalletConnection } from "./contexts/wallet/WalletContext";
 import { BackerUTxO, CampaignUTxO } from "./contexts/campaign/CampaignContext";
-import { BackerDatum, CampaignActionRedeemer, CampaignDatum, CampaignState } from "@/types/crowdfunding";
-import { adaToLovelace, handleSuccess } from "./utils";
 
 async function submitTx(tx: TxSignBuilder) {
   const txSigned = await tx.sign.withWallet().complete();
@@ -169,7 +170,6 @@ export async function createCampaign(
   const StateTokenUnit = toUnit(campaignPolicy, STATE_TOKEN.hex); // `${PolicyID}${AssetName}`
   const StateToken = { [StateTokenUnit]: 1n };
 
-  //#region Temp CBOR Serialize/Deserializing
   const campaignDatum: CampaignDatum = {
     name: fromText(campaign.name),
     goal: campaign.goal,
@@ -177,21 +177,7 @@ export async function createCampaign(
     creator: [creator.pkh ?? "", creator.skh ?? ""],
     state: "Running",
   };
-  const campaignDatumRedeemer = Data.to(campaignDatum, CampaignDatum);
-
-  // Serializing to CBOR
-  const creatorAddress = [creator.pkh ?? "", creator.skh ?? ""];
-  const campaignState = CampaignState.Running.Constr;
-  const campaignDatumFromConstr = new Constr(0, [fromText(campaign.name), BigInt(campaign.goal), BigInt(campaign.deadline), creatorAddress, campaignState]);
-  const mintRedeemer = Data.to(campaignDatumFromConstr);
-  console.log(mintRedeemer);
-
-  // Deserializing from CBOR
-  const datum = Data.from(mintRedeemer, CampaignDatum);
-  console.log(datum);
-
-  console.log(campaignDatumRedeemer === mintRedeemer);
-  //#endregion
+  const mintRedeemer = Data.to(campaignDatum, CampaignDatum);
 
   const now = await koios.getBlockTimeMs();
 
@@ -248,7 +234,7 @@ export async function createCampaign(
   };
 }
 
-export async function cancelCampaign({ lucid, wallet }: WalletConnection, campaign?: CampaignUTxO): Promise<CampaignUTxO> {
+export async function cancelCampaign({ lucid, wallet }: WalletConnection, campaign?: CampaignUTxO, platform?: Platform): Promise<CampaignUTxO> {
   if (!lucid) throw "Unitialized Lucid";
   if (!wallet) throw "Disconnected Wallet";
   if (!campaign) throw "No Campaign";
@@ -269,13 +255,25 @@ export async function cancelCampaign({ lucid, wallet }: WalletConnection, campai
     lucid.selectWallet.fromAPI(api);
   }
 
-  const tx = await lucid
+  let newTx = lucid
     .newTx()
-    .collectFrom([StateTokenUTxO], CampaignActionRedeemer.Cancel)
+    .collectFrom([StateTokenUTxO], CampaignActionRedeemer.Cancel) // TxInput: StateToken UTxO
     .attach.SpendingValidator(CampaignInfo.validator)
-    .pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n })
-    .addSigner(CampaignInfo.data.creator.address)
-    .complete({ localUPLCEval: false });
+    .pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n }); // TxOutput: Resend StateToken
+
+  //#region Either executed by the crowdfunding platform, or by the campaign creator
+  if (platform) {
+    // signed by the crowdfunding platform
+    // must be after deadline
+    const now = await koios.getBlockTimeMs();
+    newTx = newTx.addSigner(platform.address).validFrom(now);
+  } else {
+    // signed by the campaign creator
+    newTx = newTx.addSigner(CampaignInfo.data.creator.address);
+  }
+  //#endregion
+
+  const tx = await newTx.complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
   handleSuccess(`Cancel Campaign TxHash: ${txHash}`);
@@ -342,7 +340,7 @@ export async function supportCampaign(
   };
 }
 
-export async function finishCampaign({ lucid, wallet }: WalletConnection, campaign?: CampaignUTxO): Promise<CampaignUTxO> {
+export async function finishCampaign({ lucid, wallet }: WalletConnection, campaign?: CampaignUTxO, platform?: Platform): Promise<CampaignUTxO> {
   if (!lucid) throw "Unitialized Lucid";
   if (!wallet) throw "Disconnected Wallet";
   if (!campaign) throw "No Campaign";
@@ -363,14 +361,26 @@ export async function finishCampaign({ lucid, wallet }: WalletConnection, campai
     lucid.selectWallet.fromAPI(api);
   }
 
-  const tx = await lucid
+  let newTx = lucid
     .newTx()
-    .collectFrom([StateTokenUTxO, ...CampaignInfo.data.backers.map(({ utxo }) => utxo)], CampaignActionRedeemer.Finish)
+    .collectFrom([StateTokenUTxO, ...CampaignInfo.data.backers.map(({ utxo }) => utxo)], CampaignActionRedeemer.Finish) // TxInputs: StateToken UTxO & Support
     .attach.SpendingValidator(CampaignInfo.validator)
-    .pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n })
-    .pay.ToAddress(CampaignInfo.data.creator.address, { lovelace: CampaignInfo.data.support.lovelace })
-    .addSigner(CampaignInfo.data.creator.address)
-    .complete({ localUPLCEval: false });
+    .pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n }) // TxOutput: Resend StateToken
+    .pay.ToAddress(CampaignInfo.data.creator.address, { lovelace: CampaignInfo.data.support.lovelace }); // TxOutput: Send support to the campaign creator
+
+  //#region Either executed by the crowdfunding platform, or by the campaign creator
+  if (platform) {
+    // signed by the crowdfunding platform
+    // must be after deadline
+    const now = await koios.getBlockTimeMs();
+    newTx = newTx.addSigner(platform.address).validFrom(now);
+  } else {
+    // signed by the campaign creator
+    newTx = newTx.addSigner(CampaignInfo.data.creator.address);
+  }
+  //#endregion
+
+  const tx = await newTx.addSigner(CampaignInfo.data.creator.address).complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
   handleSuccess(`Finish Campaign TxHash: ${txHash}`);
@@ -381,7 +391,7 @@ export async function finishCampaign({ lucid, wallet }: WalletConnection, campai
   };
 }
 
-export async function refundCampaign({ lucid, wallet, address }: WalletConnection, campaign?: CampaignUTxO): Promise<CampaignUTxO> {
+export async function refundCampaign({ lucid, wallet, address }: WalletConnection, campaign?: CampaignUTxO, platform?: Platform): Promise<CampaignUTxO> {
   if (!lucid) throw "Unitialized Lucid";
   if (!wallet) throw "Disconnected Wallet";
   if (!address) throw "No Address";
@@ -390,26 +400,30 @@ export async function refundCampaign({ lucid, wallet, address }: WalletConnectio
   const { CampaignInfo, StateToken } = campaign;
   if (!CampaignInfo.data.support.ada) throw "Nothing to Refund";
 
-  const currentBacker = CampaignInfo.data.backers.filter((backer) => backer.address === address);
-  const backerADA = currentBacker.reduce((sum, { support }) => sum + support.ada, 0);
+  const currentBacker = platform ? CampaignInfo.data.backers : CampaignInfo.data.backers.filter((backer) => backer.address === address);
+  const backerADA = platform ? CampaignInfo.data.support.ada : currentBacker.reduce((sum, { support }) => sum + support.ada, 0);
   if (!backerADA) throw "You did not support this campaign, or you're already refunded. Incorrect? Contact us!";
-  const backerLovelace = adaToLovelace(`${backerADA}`);
+  const backerLovelace = platform ? CampaignInfo.data.support.lovelace : adaToLovelace(`${backerADA}`);
 
   if (!lucid.wallet()) {
     const api = await wallet.enable();
     lucid.selectWallet.fromAPI(api);
   }
 
-  const tx = await lucid
+  let newTx = lucid
     .newTx()
-    .readFrom([StateToken.utxo])
+    .readFrom([StateToken.utxo]) // TxRefInput: StateToken UTxO
     .collectFrom(
       currentBacker.map(({ utxo }) => utxo),
       CampaignActionRedeemer.Refund
-    )
-    .attach.SpendingValidator(CampaignInfo.validator)
-    .pay.ToAddress(address, { lovelace: backerLovelace })
-    .complete({ localUPLCEval: false });
+    ) // TxInputs: Backer support UTxO(s)
+    .attach.SpendingValidator(CampaignInfo.validator);
+
+  for (const { address, support } of currentBacker) {
+    newTx = newTx.pay.ToAddress(address, { lovelace: support.lovelace }); // TxOutput: Send support back
+  }
+
+  const tx = await newTx.complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
   handleSuccess(`Refund Campaign TxHash: ${txHash}`);
@@ -420,8 +434,11 @@ export async function refundCampaign({ lucid, wallet, address }: WalletConnectio
       ...CampaignInfo,
       data: {
         ...CampaignInfo.data,
-        backers: CampaignInfo.data.backers.filter((backer) => backer.address !== address),
-        support: { ada: CampaignInfo.data.support.ada - backerADA, lovelace: CampaignInfo.data.support.lovelace - backerLovelace },
+        backers: platform ? [] : CampaignInfo.data.backers.filter((backer) => backer.address !== address),
+        support: {
+          ada: platform ? 0 : CampaignInfo.data.support.ada - backerADA,
+          lovelace: platform ? 0n : CampaignInfo.data.support.lovelace - backerLovelace,
+        },
       },
     },
   };
