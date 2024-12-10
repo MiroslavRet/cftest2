@@ -78,12 +78,12 @@ export default function AdminPanel() {
                   actionButtons={
                     campaign.CampaignInfo.data.state === "Running" ? (
                       campaign.CampaignInfo.data.support.ada < campaign.CampaignInfo.data.goal ? (
-                        <ButtonCancelCampaign platform={platform} callback={setCampaign} />
+                        <ButtonCancelCampaign platform={platform} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
                       ) : (
-                        <ButtonFinishCampaign platform={platform} callback={setCampaign} />
+                        <ButtonFinishCampaign platform={platform} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
                       )
                     ) : (
-                      <ButtonRefundCampaign platform={platform} callback={setCampaign} />
+                      <ButtonRefundCampaign platform={platform} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
                     )
                   }
                 />

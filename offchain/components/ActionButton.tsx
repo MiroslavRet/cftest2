@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { CampaignUTxO, useCampaign } from "./contexts/campaign/CampaignContext";
 import { handleError } from "./utils";
+import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
 
 import { Button } from "@nextui-org/button";
 import { Spinner } from "@nextui-org/spinner";
@@ -8,13 +8,12 @@ import { Spinner } from "@nextui-org/spinner";
 export default function ActionButton(props: {
   actionLabel: string;
   campaignAction: () => Promise<CampaignUTxO>;
-  callback?: (campaign: CampaignUTxO) => void;
+  onSuccess: (campaign: CampaignUTxO) => void;
+  onError?: (error: any) => void;
   buttonColor?: "danger" | "default" | "primary" | "secondary" | "success" | "warning";
   buttonVariant?: "flat" | "solid" | "bordered" | "light" | "faded" | "shadow" | "ghost";
 }) {
-  const { actionLabel, campaignAction, callback, buttonColor, buttonVariant } = props;
-
-  const [, processCampaign] = useCampaign();
+  const { actionLabel, campaignAction, onSuccess, onError, buttonColor, buttonVariant } = props;
 
   const [isSubmittingTx, setIsSubmittingTx] = useState(false);
 
@@ -26,14 +25,8 @@ export default function ActionButton(props: {
           loader.showModal();
           setIsSubmittingTx(true);
           campaignAction()
-            .then((campaign) => {
-              processCampaign({
-                actionType: "Store",
-                nextState: campaign,
-              });
-              if (callback) callback(campaign);
-            })
-            .catch(handleError)
+            .then(onSuccess)
+            .catch(onError ?? handleError)
             .finally(() => {
               setIsSubmittingTx(false);
               loader.close();

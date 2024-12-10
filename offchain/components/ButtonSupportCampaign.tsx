@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useWallet } from "./contexts/wallet/WalletContext";
-import { useCampaign } from "./contexts/campaign/CampaignContext";
+import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
 import { supportCampaign } from "./crowdfunding";
 import { handleError } from "./utils";
 
@@ -9,9 +9,10 @@ import { Input } from "@nextui-org/input";
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/modal";
 import { Spinner } from "@nextui-org/spinner";
 
-export default function ButtonSupportCampaign() {
+export default function ButtonSupportCampaign(props: { campaign: CampaignUTxO; onSuccess: (campaign: CampaignUTxO) => void; onError?: (error: any) => void }) {
+  const { campaign, onSuccess, onError } = props;
+
   const [walletConnection] = useWallet();
-  const [campaign, processCampaign] = useCampaign();
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -68,13 +69,8 @@ export default function ButtonSupportCampaign() {
                     onPress={() => {
                       setIsSubmittingTx(true);
                       supportCampaign(walletConnection, campaign, supportAmount)
-                        .then((campaign) =>
-                          processCampaign({
-                            actionType: "Store",
-                            nextState: campaign,
-                          })
-                        )
-                        .catch(handleError)
+                        .then(onSuccess)
+                        .catch(onError ?? handleError)
                         .finally(onClose);
                     }}
                     className={isSubmittingTx ? "invisible" : ""}

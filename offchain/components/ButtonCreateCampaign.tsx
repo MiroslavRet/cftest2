@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
-import { useCampaign } from "./contexts/campaign/CampaignContext";
+import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
 import { createCampaign } from "@/components/crowdfunding";
 import { adaToLovelace, handleError } from "@/components/utils";
 import { koios } from "@/components/koios";
@@ -15,11 +14,10 @@ import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure
 import { Skeleton } from "@nextui-org/skeleton";
 import { Spinner } from "@nextui-org/spinner";
 
-export default function ButtonCreateCampaign() {
-  const router = useRouter();
-  const [walletConnection] = useWallet();
-  const [, processCampaign] = useCampaign();
+export default function ButtonCreateCampaign(props: { onSuccess: (campaign: CampaignUTxO) => void; onError?: (error: any) => void }) {
+  const { onSuccess, onError } = props;
 
+  const [walletConnection] = useWallet();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   useEffect(() => {
@@ -159,14 +157,8 @@ export default function ButtonCreateCampaign() {
                     onPress={() => {
                       setIsSubmittingTx(true);
                       createCampaign(walletConnection, { name: campaignName, goal, deadline })
-                        .then((campaign) => {
-                          processCampaign({
-                            actionType: "Store",
-                            nextState: campaign,
-                          });
-                          router.push("/creator");
-                        })
-                        .catch(handleError)
+                        .then(onSuccess)
+                        .catch(onError ?? handleError)
                         .finally(onClose);
                     }}
                     isDisabled={!isValidCampaign()}

@@ -11,11 +11,14 @@ import ButtonSupportCampaign from "@/components/ButtonSupportCampaign";
 export default function BackerDashboard() {
   const router = useRouter();
   const [{ address }] = useWallet();
-  const [campaign] = useCampaign();
+  const [campaign, processCampaign] = useCampaign();
   if (!campaign || campaign.CampaignInfo.data.creator.address === address)
     return (
       <InputCampaignId
-        onSuccess={({ CampaignInfo }) => router.push(CampaignInfo.data.creator.address === address ? "/creator" : "/backer")}
+        onSuccess={(campaign) => {
+          processCampaign({ actionType: "Store", nextState: campaign });
+          if (CampaignInfo.data.creator.address === address) router.push("/creator");
+        }}
         onError={handleError}
       />
     );
@@ -29,10 +32,18 @@ export default function BackerDashboard() {
         <>
           {CampaignInfo.data.state === "Running" ? (
             // Goal not reached yet? Creator can cancel the campaign:
-            <ButtonSupportCampaign />
+            <ButtonSupportCampaign
+              campaign={campaign}
+              onSuccess={(campaign) => processCampaign({ actionType: "Store", nextState: campaign })}
+              onError={handleError}
+            />
           ) : (
             // Goal reached? Creator may finish the campaign, even earlier than the deadline:
-            <ButtonRefundCampaign />
+            <ButtonRefundCampaign
+              campaign={campaign}
+              onSuccess={(campaign) => processCampaign({ actionType: "Store", nextState: campaign })}
+              onError={handleError}
+            />
           )}
         </>
       }

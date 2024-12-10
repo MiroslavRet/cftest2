@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
+import { useCampaign } from "@/components/contexts/campaign/CampaignContext";
 
 import { handleError } from "@/components/utils";
 import { title } from "@/components/primitives";
@@ -12,6 +13,7 @@ import ButtonCreateCampaign from "../../ButtonCreateCampaign";
 export default function ConnectedDashboard() {
   const router = useRouter();
   const [{ wallet, address }] = useWallet();
+  const [, processCampaign] = useCampaign();
 
   return (
     <div className="flex flex-col text-center justify-center">
@@ -31,11 +33,20 @@ export default function ConnectedDashboard() {
       <Snippet hideCopyButton hideSymbol className="w-fit mx-auto mt-8 pt-3 pb-4">
         <div className="flex flex-col items-center">
           <InputCampaignId
-            onSuccess={({ CampaignInfo }) => router.push(CampaignInfo.data.creator.address === address ? "/creator" : "/backer")}
+            onSuccess={(campaign) => {
+              processCampaign({ actionType: "Store", nextState: campaign });
+              router.push(campaign.CampaignInfo.data.creator.address === address ? "/creator" : "/backer");
+            }}
             onError={handleError}
           />
           <span className="my-2">or</span>
-          <ButtonCreateCampaign />
+          <ButtonCreateCampaign
+            onSuccess={(campaign) => {
+              processCampaign({ actionType: "Store", nextState: campaign });
+              router.push("/creator");
+            }}
+            onError={handleError}
+          />
         </div>
       </Snippet>
     </div>

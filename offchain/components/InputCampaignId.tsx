@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { useWallet } from "./contexts/wallet/WalletContext";
 import { queryCampaign } from "./crowdfunding";
-import { CampaignUTxO, useCampaign } from "./contexts/campaign/CampaignContext";
+import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
+import { handleError } from "./utils";
 
 import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
 import { Spinner } from "@nextui-org/spinner";
 
-export default function InputCampaignId(props: { onSuccess: (campaign: CampaignUTxO) => void; onError: (error: any) => void }) {
+export default function InputCampaignId(props: { onSuccess: (campaign: CampaignUTxO) => void; onError?: (error: any) => void }) {
   const { onSuccess, onError } = props;
 
   const [walletConnection] = useWallet();
-  const [, processCampaign] = useCampaign();
 
   const [campaignId, setCampaignId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,17 +21,14 @@ export default function InputCampaignId(props: { onSuccess: (campaign: CampaignU
     loader.showModal();
     setIsLoading(true);
     queryCampaign(walletConnection, campaignId)
-      .then((campaign) => {
-        processCampaign({ actionType: "Store", nextState: campaign });
-        onSuccess(campaign);
-      })
-      .catch((error) => {
-        onError(
+      .then(onSuccess)
+      .catch((error) =>
+        (onError ?? handleError)(
           "Cannot read properties of undefined (reading 'minting_tx_metadata')" === error.message
             ? "Cannot find Campaign ID (the campaign might be just created, please try again later)"
             : error
-        );
-      })
+        )
+      )
       .finally(() => {
         try {
           loader.close();
