@@ -3,10 +3,10 @@ import { useWallet } from "@/components/contexts/wallet/WalletContext";
 import { useCampaign } from "@/components/contexts/campaign/CampaignContext";
 import { handleError } from "@/components/utils";
 
-import CampaignCard from "@/components/CampaignCard";
-import ButtonCreateCampaign from "@/components/ButtonCreateCampaign";
-import ButtonCancelCampaign from "@/components/ButtonCancelCampaign";
-import ButtonFinishCampaign from "@/components/ButtonFinishCampaign";
+import CampaignCard from "@/components/campaign/CampaignCard";
+import ButtonCreateCampaign from "@/components/buttons/campaign/ButtonCreateCampaign";
+import ButtonCancelCampaign from "@/components/buttons/campaign/ButtonCancelCampaign";
+import ButtonFinishCampaign from "@/components/buttons/campaign/ButtonFinishCampaign";
 
 export default function CreatorDashboard() {
   const router = useRouter();

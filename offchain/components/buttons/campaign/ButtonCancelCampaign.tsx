@@ -1,8 +1,8 @@
-import { useWallet } from "./contexts/wallet/WalletContext";
-import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
-import { cancelCampaign } from "./crowdfunding";
+import { useWallet } from "../../contexts/wallet/WalletContext";
+import { CampaignUTxO } from "../../contexts/campaign/CampaignContext";
+import { cancelCampaign } from "../../crowdfunding";
 import { Platform } from "@/types/platform";
-import ActionButton from "./ActionButton";
+import ActionButton from "../base/ActionButton";
 
 export default function ButtonCancelCampaign(props: {
   platform?: Platform;

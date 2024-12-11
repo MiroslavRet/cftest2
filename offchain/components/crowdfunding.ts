@@ -1,4 +1,4 @@
-import { koios } from "./koios";
+import { koios } from "./providers/koios";
 import {
   applyParamsToScript,
   Constr,
@@ -88,20 +88,24 @@ export async function queryCampaign({ lucid, wallet }: WalletConnection, campaig
   //#region Backers Info
   const utxos = await lucid.utxosAt(campaignAddress);
   const backers: BackerUTxO[] = [];
+  const noDatumUTXOs: UTxO[] = [];
   for (const utxo of utxos) {
-    if (!utxo.datum) continue;
-    try {
-      const [pkh, skh] = Data.from(utxo.datum, BackerDatum);
-      const backerPk = keyHashToCredential(pkh);
-      const backerSk = skh ? keyHashToCredential(skh) : undefined;
-      const backerAddress = credentialToAddress(network, backerPk, backerSk);
+    if (!utxo.datum) {
+      noDatumUTXOs.push(utxo);
+    } else {
+      try {
+        const [pkh, skh] = Data.from(utxo.datum, BackerDatum);
+        const backerPk = keyHashToCredential(pkh);
+        const backerSk = skh ? keyHashToCredential(skh) : undefined;
+        const backerAddress = credentialToAddress(network, backerPk, backerSk);
 
-      const supportLovelace = utxo.assets.lovelace;
-      const supportADA = parseFloat(`${supportLovelace / 1_000000n}.${supportLovelace % 1_000000n}`);
+        const supportLovelace = utxo.assets.lovelace;
+        const supportADA = parseFloat(`${supportLovelace / 1_000000n}.${supportLovelace % 1_000000n}`);
 
-      backers.push({ utxo, pkh, skh, pk: backerPk, sk: backerSk, address: backerAddress, support: { lovelace: supportLovelace, ada: supportADA } });
-    } catch {
-      continue;
+        backers.push({ utxo, pkh, skh, pk: backerPk, sk: backerSk, address: backerAddress, support: { lovelace: supportLovelace, ada: supportADA } });
+      } catch {
+        continue;
+      }
     }
   }
   //#endregion
@@ -122,6 +126,7 @@ export async function queryCampaign({ lucid, wallet }: WalletConnection, campaig
         deadline: new Date(parseInt(campaignDatum.deadline.toString())),
         creator: { pk: creatorPk, sk: creatorSk, address: creatorAddress },
         backers,
+        noDatum: noDatumUTXOs,
         support: { lovelace: supportLovelace, ada: supportADA },
         state: campaignDatum.state,
       },
@@ -217,6 +222,7 @@ export async function createCampaign(
         deadline: new Date(parseInt(campaign.deadline.toString())),
         creator: { pk: keyHashToCredential(creator.pkh ?? ""), sk: keyHashToCredential(creator.skh ?? ""), address: creator.address ?? "" },
         backers: [],
+        noDatum: [],
         support: { lovelace: 0n, ada: 0 },
         state: "Running",
       },
@@ -439,6 +445,41 @@ export async function refundCampaign({ lucid, wallet, address }: WalletConnectio
           ada: platform ? 0 : CampaignInfo.data.support.ada - backerADA,
           lovelace: platform ? 0n : CampaignInfo.data.support.lovelace - backerLovelace,
         },
+      },
+    },
+  };
+}
+
+export async function claimNoDatumUTXOs({ lucid, wallet, address }: WalletConnection, campaign: CampaignUTxO, utxo?: UTxO): Promise<CampaignUTxO> {
+  if (!lucid) throw "Unitialized Lucid";
+  if (!wallet) throw "Disconnected Wallet";
+  if (!address) throw "No Address";
+
+  const { CampaignInfo, StateToken } = campaign;
+
+  if (!lucid.wallet()) {
+    const api = await wallet.enable();
+    lucid.selectWallet.fromAPI(api);
+  }
+
+  const tx = await lucid
+    .newTx()
+    .readFrom([StateToken.utxo])
+    .collectFrom(utxo ? [utxo] : CampaignInfo.data.noDatum, Data.void())
+    .attach.SpendingValidator(CampaignInfo.validator)
+    .addSigner(address)
+    .complete({ localUPLCEval: false });
+
+  const txHash = await submitTx(tx);
+  handleSuccess(`Refund Campaign TxHash: ${txHash}`);
+
+  return {
+    ...campaign,
+    CampaignInfo: {
+      ...CampaignInfo,
+      data: {
+        ...CampaignInfo.data,
+        noDatum: utxo ? CampaignInfo.data.noDatum.filter(({ txHash, outputIndex }) => txHash !== utxo.txHash || outputIndex != utxo.outputIndex) : [],
       },
     },
   };

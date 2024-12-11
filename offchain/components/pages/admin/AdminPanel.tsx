@@ -6,12 +6,17 @@ import { CampaignUTxO } from "@/components/contexts/campaign/CampaignContext";
 import { Platform } from "@/types/platform";
 
 import { Accordion, AccordionItem } from "@nextui-org/accordion";
+import { Divider } from "@nextui-org/divider";
 import { Input } from "@nextui-org/input";
-import InputCampaignId from "@/components/InputCampaignId";
-import CampaignCard from "@/components/CampaignCard";
-import ButtonCancelCampaign from "@/components/ButtonCancelCampaign";
-import ButtonFinishCampaign from "@/components/ButtonFinishCampaign";
-import ButtonRefundCampaign from "@/components/ButtonRefundCampaign";
+import { Skeleton } from "@nextui-org/skeleton";
+
+import InputCampaignId from "@/components/campaign/InputCampaignId";
+import CampaignCard from "@/components/campaign/CampaignCard";
+import ButtonCancelCampaign from "@/components/buttons/campaign/ButtonCancelCampaign";
+import ButtonFinishCampaign from "@/components/buttons/campaign/ButtonFinishCampaign";
+import ButtonRefundCampaign from "@/components/buttons/campaign/ButtonRefundCampaign";
+import ButtonClaimAllNoDatumUTxO from "@/components/buttons/nodatum/ButtonClaimAllNoDatum";
+import NoDatumUTxO from "./NoDatumUTxO";
 
 import { Address, credentialToRewardAddress, getAddressDetails } from "@lucid-evolution/lucid";
 import { network } from "@/config/lucid";
@@ -23,6 +28,7 @@ export default function AdminPanel() {
   const platform: Platform = crowdfundingPlatform ? JSON.parse(crowdfundingPlatform) : {};
 
   const [campaign, setCampaign] = useState<CampaignUTxO>();
+  const [isQueryingCampaign, setIsQueryingCampaign] = useState(false);
 
   function setPlatformData(address: Address) {
     if (!address) {
@@ -48,7 +54,7 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {/* Platform Address */}
       <Input
         isClearable
@@ -64,31 +70,65 @@ export default function AdminPanel() {
         <Accordion variant="bordered">
           {/* Query Campaign */}
           <AccordionItem key="query-campaign" aria-label="Query Campaign" title="Query Campaign">
-            {/* Input Campaign ID */}
-            <div className="mb-3">
-              <InputCampaignId onSuccess={setCampaign} onError={handleError} />
-            </div>
+            <div className="flex flex-col gap-3 mb-1.5">
+              {/* Input Campaign ID */}
+              <InputCampaignId
+                onSubmit={() => setIsQueryingCampaign(true)}
+                onSuccess={(campaign) => {
+                  setCampaign(campaign);
+                  setIsQueryingCampaign(false);
+                }}
+                onError={handleError}
+              />
 
-            {/* Campaign Card */}
-            {campaign && (
-              <div className="mb-1.5">
-                <CampaignCard
-                  campaign={campaign}
-                  hasActions={new Date() > campaign.CampaignInfo.data.deadline}
-                  actionButtons={
-                    campaign.CampaignInfo.data.state === "Running" ? (
-                      campaign.CampaignInfo.data.support.ada < campaign.CampaignInfo.data.goal ? (
-                        <ButtonCancelCampaign platform={platform} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
-                      ) : (
-                        <ButtonFinishCampaign platform={platform} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
-                      )
-                    ) : (
-                      <ButtonRefundCampaign platform={platform} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
-                    )
-                  }
-                />
-              </div>
-            )}
+              {/* Campaign Card + NoDatum UTxOs */}
+              {campaign && (
+                <div className="flex flex-col gap-4 w-fit">
+                  {/* Campaign Card */}
+                  <Skeleton isLoaded={!isQueryingCampaign} className="rounded-lg w-fit">
+                    <CampaignCard
+                      campaign={campaign}
+                      hasActions={new Date() > campaign.CampaignInfo.data.deadline}
+                      actionButtons={
+                        campaign.CampaignInfo.data.state === "Running" ? (
+                          campaign.CampaignInfo.data.support.ada < campaign.CampaignInfo.data.goal ? (
+                            <ButtonCancelCampaign platform={platform} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
+                          ) : (
+                            <ButtonFinishCampaign platform={platform} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
+                          )
+                        ) : (
+                          <ButtonRefundCampaign platform={platform} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
+                        )
+                      }
+                    />
+                  </Skeleton>
+
+                  {/* NoDatum UTxOs */}
+                  {campaign.CampaignInfo.data.noDatum.length > 0 && (
+                    <>
+                      <Divider />
+                      <div className="flex justify-between w-full px-3">
+                        {/* NoDatum UTxOs Label */}
+                        <Skeleton isLoaded={!isQueryingCampaign} className="rounded-lg w-fit my-auto">
+                          <span className="font-bold">NoDatum UTxOs</span>
+                        </Skeleton>
+
+                        {/* Claim All Button */}
+                        <Skeleton isLoaded={!isQueryingCampaign} className="rounded-lg w-fit">
+                          <ButtonClaimAllNoDatumUTxO campaign={campaign} onSuccess={setCampaign} onError={handleError} />
+                        </Skeleton>
+                      </div>
+                      <Divider />
+                    </>
+                  )}
+                  {campaign.CampaignInfo.data.noDatum.map((utxo) => (
+                    <Skeleton key={`${utxo.txHash}#${utxo.outputIndex}`} isLoaded={!isQueryingCampaign} className="rounded-lg w-full">
+                      <NoDatumUTxO utxo={utxo} campaign={campaign} onSuccess={setCampaign} onError={handleError} />
+                    </Skeleton>
+                  ))}
+                </div>
+              )}
+            </div>
           </AccordionItem>
         </Accordion>
       )}

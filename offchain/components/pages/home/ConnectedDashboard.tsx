@@ -7,8 +7,8 @@ import { title } from "@/components/primitives";
 
 import { Snippet } from "@nextui-org/snippet";
 
-import InputCampaignId from "../../InputCampaignId";
-import ButtonCreateCampaign from "../../ButtonCreateCampaign";
+import InputCampaignId from "../../campaign/InputCampaignId";
+import ButtonCreateCampaign from "../../buttons/campaign/ButtonCreateCampaign";
 
 export default function ConnectedDashboard() {
   const router = useRouter();

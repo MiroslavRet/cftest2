@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { useWallet } from "./contexts/wallet/WalletContext";
-import { queryCampaign } from "./crowdfunding";
-import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
-import { handleError } from "./utils";
+import { useWallet } from "../contexts/wallet/WalletContext";
+import { queryCampaign } from "../crowdfunding";
+import { CampaignUTxO } from "../contexts/campaign/CampaignContext";
+import { handleError } from "../utils";
 
 import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
 import { Spinner } from "@nextui-org/spinner";
 
-export default function InputCampaignId(props: { onSuccess: (campaign: CampaignUTxO) => void; onError?: (error: any) => void }) {
-  const { onSuccess, onError } = props;
+export default function InputCampaignId(props: { onSubmit?: () => void; onSuccess: (campaign: CampaignUTxO) => void; onError?: (error: any) => void }) {
+  const { onSubmit, onSuccess, onError } = props;
 
   const [walletConnection] = useWallet();
 
@@ -17,8 +17,11 @@ export default function InputCampaignId(props: { onSuccess: (campaign: CampaignU
   const [isLoading, setIsLoading] = useState(false);
 
   async function submit() {
-    const loader = document.getElementById("loader") as HTMLDialogElement;
+    const loader = document.getElementById(`${campaignId}-loader`) as HTMLDialogElement;
     loader.showModal();
+
+    if (onSubmit) onSubmit();
+
     setIsLoading(true);
     queryCampaign(walletConnection, campaignId)
       .then(onSuccess)
@@ -42,7 +45,7 @@ export default function InputCampaignId(props: { onSuccess: (campaign: CampaignU
     return (
       <div className="relative">
         <Button
-          onClick={submit}
+          onPress={submit}
           className={isLoading ? "invisible" : ""}
           color={campaignId ? "primary" : "default"}
           isDisabled={!campaignId}
@@ -69,7 +72,7 @@ export default function InputCampaignId(props: { onSuccess: (campaign: CampaignU
         variant="bordered"
         radius="sm"
       />
-      <dialog id="loader" />
+      <dialog id={`${campaignId}-loader`} />
     </>
   );
 }

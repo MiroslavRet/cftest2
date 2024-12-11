@@ -14,7 +14,7 @@ export default function DisconnectButton() {
   }
 
   return (
-    <Button onClick={disconnect} className="absolute top-0 right-0 -translate-y-full">
+    <Button onPress={disconnect} className="absolute top-0 right-0 -translate-y-full">
       Disconnect
     </Button>
   );

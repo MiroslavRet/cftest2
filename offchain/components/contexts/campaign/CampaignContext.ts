@@ -29,6 +29,7 @@ export type CampaignUTxO = {
       deadline: Date;
       creator: { pk: Credential; sk?: Credential; address: Address };
       backers: BackerUTxO[];
+      noDatum: UTxO[];
       support: Support;
       state: CampaignState;
     };

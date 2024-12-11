@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useWallet } from "./contexts/wallet/WalletContext";
-import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
-import { supportCampaign } from "./crowdfunding";
-import { handleError } from "./utils";
+import { useWallet } from "../../contexts/wallet/WalletContext";
+import { CampaignUTxO } from "../../contexts/campaign/CampaignContext";
+import { supportCampaign } from "../../crowdfunding";
+import { handleError } from "../../utils";
 
 import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";

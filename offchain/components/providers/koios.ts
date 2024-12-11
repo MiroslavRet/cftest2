@@ -1,5 +1,5 @@
 import { PolicyId } from "@lucid-evolution/lucid";
-import { req } from "./utils";
+import { req } from "../utils";
 
 export const koios = {
   getBlockTimeMs: async () => {

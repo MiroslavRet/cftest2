@@ -75,7 +75,7 @@ export default function WalletConnectors() {
     <div className="flex flex-col gap-4 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6">
       {wallets.map((wallet, w) => (
         <Skeleton key={`wallet.${w}`} isLoaded={!!lucid} className="rounded-full">
-          <Button onClick={() => onConnectWallet(wallet)} color="primary" radius="full" variant="shadow" className="capitalize" fullWidth>
+          <Button onPress={() => onConnectWallet(wallet)} color="primary" radius="full" variant="shadow" className="capitalize" fullWidth>
             {wallet.name}
           </Button>
         </Skeleton>

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { handleError } from "./utils";
-import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
+import { handleError } from "../../utils";
+import { CampaignUTxO } from "../../contexts/campaign/CampaignContext";
 
 import { Button } from "@nextui-org/button";
 import { Spinner } from "@nextui-org/spinner";
@@ -21,7 +21,7 @@ export default function ActionButton(props: {
     <div className="relative">
       <Button
         onPress={() => {
-          const loader = document.getElementById("loader") as HTMLDialogElement;
+          const loader = document.getElementById(`${actionLabel}-loader`) as HTMLDialogElement;
           loader.showModal();
           setIsSubmittingTx(true);
           campaignAction()
@@ -39,7 +39,7 @@ export default function ActionButton(props: {
         {actionLabel}
       </Button>
       {isSubmittingTx && <Spinner className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
-      <dialog id="loader" />
+      <dialog id={`${actionLabel}-loader`} />
     </div>
   );
 }

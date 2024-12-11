@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
-import { CampaignUTxO } from "./contexts/campaign/CampaignContext";
+import { CampaignUTxO } from "../../contexts/campaign/CampaignContext";
 import { createCampaign } from "@/components/crowdfunding";
 import { adaToLovelace, handleError } from "@/components/utils";
-import { koios } from "@/components/koios";
+import { koios } from "@/components/providers/koios";
 
 import { fromAbsolute, getLocalTimeZone, now, ZonedDateTime } from "@internationalized/date";
 

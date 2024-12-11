@@ -3,10 +3,10 @@ import { useWallet } from "@/components/contexts/wallet/WalletContext";
 import { useCampaign } from "@/components/contexts/campaign/CampaignContext";
 import { handleError } from "@/components/utils";
 
-import CampaignCard from "@/components/CampaignCard";
-import InputCampaignId from "@/components/InputCampaignId";
-import ButtonRefundCampaign from "@/components/ButtonRefundCampaign";
-import ButtonSupportCampaign from "@/components/ButtonSupportCampaign";
+import CampaignCard from "@/components/campaign/CampaignCard";
+import InputCampaignId from "@/components/campaign/InputCampaignId";
+import ButtonRefundCampaign from "@/components/buttons/campaign/ButtonRefundCampaign";
+import ButtonSupportCampaign from "@/components/buttons/campaign/ButtonSupportCampaign";
 
 export default function BackerDashboard() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function BackerDashboard() {
       <InputCampaignId
         onSuccess={(campaign) => {
           processCampaign({ actionType: "Store", nextState: campaign });
-          if (CampaignInfo.data.creator.address === address) router.push("/creator");
+          if (campaign.CampaignInfo.data.creator.address === address) router.push("/creator");
         }}
         onError={handleError}
       />
