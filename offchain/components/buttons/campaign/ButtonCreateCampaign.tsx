@@ -37,7 +37,7 @@ export default function ButtonCreateCampaign(props: { onSuccess: (campaign: Camp
   }, [isOpen]);
 
   const timezone = getLocalTimeZone();
-  const [blockTime, setBlockTime] = useState<ZonedDateTime>();
+  const [blockTime, setBlockTime] = useState<ZonedDateTime | null>();
 
   const [campaignName, setCampaignName] = useState("");
   const [campaignGoal, setCampaignGoal] = useState("");

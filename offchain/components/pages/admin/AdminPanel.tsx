@@ -114,9 +114,11 @@ export default function AdminPanel() {
                         </Skeleton>
 
                         {/* Claim All Button */}
-                        <Skeleton isLoaded={!isQueryingCampaign} className="rounded-lg w-fit">
-                          <ButtonClaimAllNoDatumUTxO campaign={campaign} onSuccess={setCampaign} onError={handleError} />
-                        </Skeleton>
+                        {campaign.CampaignInfo.data.noDatum.length > 1 && (
+                          <Skeleton isLoaded={!isQueryingCampaign} className="rounded-lg w-fit">
+                            <ButtonClaimAllNoDatumUTxO campaign={campaign} onSuccess={setCampaign} onError={handleError} />
+                          </Skeleton>
+                        )}
                       </div>
                       <Divider />
                     </>
