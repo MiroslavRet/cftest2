@@ -1,6 +1,6 @@
 name = "apea-aiken-batch-1/crowdfunding_b"
 version = "0.0.0"
-compiler = "v1.1.7"
+compiler = "v1.1.9"
 plutus = "v3"
 license = "Apache-2.0"
 description = "Aiken contracts for project 'apea-aiken-batch-1/crowdfunding_b'"
@@ -12,17 +12,17 @@ platform = "github"
 
 [[dependencies]]
 name = "aiken-lang/stdlib"
-version = "0f88f8ffce60b91ae3e4b3a3f40bab153e494760"
+version = "2.2.0"
 source = "github"
 
 [[dependencies]]
 name = "aiken-extra/time_util"
-version = "5.210.202409"
+version = "5.220.202412"
 source = "github"
 
 [[dependencies]]
 name = "aiken-extra/tx_util"
-version = "1.215.202411"
+version = "2.220.202412"
 source = "github"
 
 [config.default]
