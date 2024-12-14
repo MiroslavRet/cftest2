@@ -3,7 +3,7 @@ import { CampaignUTxO } from "@/components/contexts/campaign/CampaignContext";
 import { claimNoDatumUTXOs } from "@/components/crowdfunding";
 import ActionButton from "../base/ActionButton";
 
-export default function ButtonClaimAllNoDatumUTxO(props: {
+export default function ButtonClaimAllNoDatumUTXOs(props: {
   campaign: CampaignUTxO;
   onSuccess: (campaign: CampaignUTxO) => void;
   onError?: (error: any) => void;

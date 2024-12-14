@@ -386,7 +386,7 @@ export async function finishCampaign({ lucid, wallet }: WalletConnection, campai
   }
   //#endregion
 
-  const tx = await newTx.addSigner(CampaignInfo.data.creator.address).complete({ localUPLCEval: false });
+  const tx = await newTx.complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
   handleSuccess(`Finish Campaign TxHash: ${txHash}`);
@@ -483,4 +483,202 @@ export async function claimNoDatumUTXOs({ lucid, wallet, address }: WalletConnec
       },
     },
   };
+}
+
+type HackAction = {
+  action: "cancel" | "finish" | "refund" | "rerun" | "claimNoDatumUTXOs";
+  params: Record<string, any>;
+};
+
+export async function hackCampaign(
+  { lucid, wallet, address }: WalletConnection,
+  { action, params }: HackAction,
+  campaign: CampaignUTxO
+): Promise<CampaignUTxO> {
+  if (!lucid) throw "Unitialized Lucid";
+  if (!wallet) throw "Disconnected Wallet";
+  if (!campaign) throw "No Campaign";
+
+  const { CampaignInfo, StateToken } = campaign;
+
+  const [StateTokenUTxO] = await lucid.utxosAtWithUnit(CampaignInfo.address, StateToken.unit);
+
+  if (!lucid.wallet()) {
+    const api = await wallet.enable();
+    lucid.selectWallet.fromAPI(api);
+  }
+
+  switch (action) {
+    case "cancel": {
+      const { validFrom, addSigner, payToContract } = params;
+
+      const newState: CampaignState = "Cancelled";
+      const updatedDatum: CampaignDatum = {
+        ...CampaignInfo.datum,
+        state: newState,
+      };
+      const datum = Data.to(updatedDatum, CampaignDatum);
+
+      let newTx = lucid.newTx().collectFrom([StateTokenUTxO], CampaignActionRedeemer.Cancel).attach.SpendingValidator(CampaignInfo.validator);
+
+      if (payToContract.yes) {
+        newTx = newTx.pay.ToContract(payToContract.address || CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n });
+      }
+
+      if (addSigner.yes) {
+        newTx = newTx.addSigner(addSigner.address || address);
+      }
+
+      if (validFrom.yes) {
+        newTx = newTx.validFrom(validFrom.unixTime || (await koios.getBlockTimeMs()));
+      }
+
+      const tx = await newTx.complete({ localUPLCEval: false });
+
+      const txHash = await submitTx(tx);
+      handleSuccess(`Cancel Campaign TxHash: ${txHash}`);
+
+      return {
+        CampaignInfo: { ...CampaignInfo, datum: updatedDatum, data: { ...CampaignInfo.data, state: newState } },
+        StateToken: { ...StateToken, utxo: { ...StateTokenUTxO, txHash, outputIndex: 0, datum } },
+      };
+    }
+
+    case "finish": {
+      const { addSigner, payToContract, payToAddress } = params;
+
+      const newState: CampaignState = "Finished";
+      const updatedDatum: CampaignDatum = {
+        ...CampaignInfo.datum,
+        state: newState,
+      };
+      const datum = Data.to(updatedDatum, CampaignDatum);
+
+      let newTx = lucid
+        .newTx()
+        .collectFrom([StateTokenUTxO, ...CampaignInfo.data.backers.map(({ utxo }) => utxo)], CampaignActionRedeemer.Finish)
+        .attach.SpendingValidator(CampaignInfo.validator);
+
+      if (payToAddress.yes) {
+        newTx = newTx.pay.ToAddress(payToAddress.address || CampaignInfo.data.creator.address, {
+          lovelace: payToAddress.lovelace && payToAddress.lovelace > 0n ? payToAddress.lovelace : CampaignInfo.data.support.lovelace,
+        });
+      }
+
+      if (payToContract.yes) {
+        newTx = newTx.pay.ToContract(payToContract.address || CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n });
+      }
+
+      if (addSigner.yes) {
+        newTx = newTx.addSigner(addSigner.address || address);
+      }
+
+      const tx = await newTx.complete({ localUPLCEval: false });
+
+      const txHash = await submitTx(tx);
+      handleSuccess(`Finish Campaign TxHash: ${txHash}`);
+
+      return {
+        CampaignInfo: { ...CampaignInfo, datum: updatedDatum, data: { ...CampaignInfo.data, state: newState, backers: [], support: { ada: 0, lovelace: 0n } } },
+        StateToken: { ...StateToken, utxo: { ...StateTokenUTxO, txHash, outputIndex: 0, datum } },
+      };
+    }
+
+    case "refund": {
+      const { payToAddress } = params;
+
+      if (!CampaignInfo.data.support.ada) throw "Nothing to Refund";
+
+      let newTx = lucid
+        .newTx()
+        .readFrom([StateToken.utxo])
+        .collectFrom(
+          CampaignInfo.data.backers.map(({ utxo }) => utxo),
+          CampaignActionRedeemer.Refund
+        )
+        .attach.SpendingValidator(CampaignInfo.validator);
+
+      if (payToAddress.yes) {
+        for (const { address, support } of CampaignInfo.data.backers) {
+          newTx = newTx.pay.ToAddress(payToAddress.address || address, { lovelace: support.lovelace });
+        }
+      }
+
+      const tx = await newTx.complete({ localUPLCEval: false });
+
+      const txHash = await submitTx(tx);
+      handleSuccess(`Refund Campaign TxHash: ${txHash}`);
+
+      return { ...campaign, CampaignInfo: { ...CampaignInfo, data: { ...CampaignInfo.data, backers: [], support: { ada: 0, lovelace: 0n } } } };
+    }
+
+    case "rerun": {
+      const { constr, addSigner } = params;
+
+      const newState: CampaignState = "Running";
+      const updatedDatum: CampaignDatum = {
+        ...CampaignInfo.datum,
+        state: newState,
+      };
+      const datum = Data.to(updatedDatum, CampaignDatum);
+
+      let newTx = lucid
+        .newTx()
+        .collectFrom([StateTokenUTxO], constr.yes ? Data.to(new Constr(constr.index ?? 3, [])) : undefined)
+        .attach.SpendingValidator(CampaignInfo.validator)
+        .pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { [StateToken.unit]: 1n });
+
+      if (addSigner.yes) {
+        newTx = newTx.addSigner(addSigner.address || address);
+      }
+
+      const tx = await newTx.complete({ localUPLCEval: false });
+
+      const txHash = await submitTx(tx);
+      handleSuccess(`Rerun Campaign TxHash: ${txHash}`);
+
+      return {
+        CampaignInfo: { ...CampaignInfo, datum: updatedDatum, data: { ...CampaignInfo.data, state: newState } },
+        StateToken: { ...StateToken, utxo: { ...StateTokenUTxO, txHash, outputIndex: 0, datum } },
+      };
+    }
+
+    case "claimNoDatumUTXOs": {
+      const { outRef, addSigner } = params;
+
+      let newTx = lucid
+        .newTx()
+        .readFrom([StateToken.utxo])
+        .collectFrom(
+          outRef.yes ? await lucid.utxosByOutRef([{ txHash: outRef.txHash, outputIndex: outRef.outputIndex }]) : CampaignInfo.data.noDatum,
+          Data.void()
+        )
+        .attach.SpendingValidator(CampaignInfo.validator);
+
+      if (addSigner.yes) {
+        newTx = newTx.addSigner(addSigner.address || address);
+      }
+
+      const tx = await newTx.complete({ localUPLCEval: false });
+
+      const txHash = await submitTx(tx);
+      handleSuccess(`Refund Campaign TxHash: ${txHash}`);
+
+      return {
+        ...campaign,
+        CampaignInfo: {
+          ...CampaignInfo,
+          data: {
+            ...CampaignInfo.data,
+            noDatum: outRef.yes
+              ? CampaignInfo.data.noDatum.filter(({ txHash, outputIndex }) => txHash !== outRef.txHash || outputIndex != outRef.outputIndex)
+              : [],
+          },
+        },
+      };
+    }
+
+    default:
+      throw "Invalid Action";
+  }
 }

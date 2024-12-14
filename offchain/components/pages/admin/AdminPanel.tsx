@@ -15,7 +15,7 @@ import CampaignCard from "@/components/campaign/CampaignCard";
 import ButtonCancelCampaign from "@/components/buttons/campaign/ButtonCancelCampaign";
 import ButtonFinishCampaign from "@/components/buttons/campaign/ButtonFinishCampaign";
 import ButtonRefundCampaign from "@/components/buttons/campaign/ButtonRefundCampaign";
-import ButtonClaimAllNoDatumUTxO from "@/components/buttons/nodatum/ButtonClaimAllNoDatum";
+import ButtonClaimAllNoDatumUTXOs from "@/components/buttons/nodatum/ButtonClaimAllNoDatumUTXOs";
 import NoDatumUTxO from "./NoDatumUTxO";
 
 import { Address, credentialToRewardAddress, getAddressDetails } from "@lucid-evolution/lucid";
@@ -116,7 +116,7 @@ export default function AdminPanel() {
                         {/* Claim All Button */}
                         {campaign.CampaignInfo.data.noDatum.length > 1 && (
                           <Skeleton isLoaded={!isQueryingCampaign} className="rounded-lg w-fit">
-                            <ButtonClaimAllNoDatumUTxO campaign={campaign} onSuccess={setCampaign} onError={handleError} />
+                            <ButtonClaimAllNoDatumUTXOs campaign={campaign} onSuccess={setCampaign} onError={handleError} />
                           </Skeleton>
                         )}
                       </div>
