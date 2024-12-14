@@ -1,23 +1,24 @@
-import { CampaignUTxO } from "../contexts/campaign/CampaignContext";
-
-import { title } from "../primitives";
 import { Badge } from "@nextui-org/badge";
 import { Card, CardBody, CardFooter, CardHeader } from "@nextui-org/card";
 import { Divider } from "@nextui-org/divider";
 import { Slider } from "@nextui-org/slider";
 import { Snippet } from "@nextui-org/snippet";
 
-export default function CampaignCard(props: { campaign: CampaignUTxO; hasActions?: boolean; actionButtons?: JSX.Element }) {
+import { title } from "../primitives";
+import { CampaignUTxO } from "../contexts/campaign/CampaignContext";
+
+export default function CampaignCard(props: {
+  campaign: CampaignUTxO;
+  hasActions?: boolean;
+  actionButtons?: JSX.Element;
+}) {
   const { campaign, hasActions, actionButtons } = props;
   const { CampaignInfo } = campaign;
 
   return (
     <Badge
       // Campaign State: Running | Cancelled | Finished
-      variant="shadow"
       className="!-top-1.5 !-right-3 animate-bounce"
-      showOutline={false}
-      content={<span className="font-bold text-xs px-2 py-1">{CampaignInfo.data.state}</span>}
       color={
         CampaignInfo.data.state === "Running"
           ? "primary"
@@ -27,6 +28,13 @@ export default function CampaignCard(props: { campaign: CampaignUTxO; hasActions
               ? "success"
               : "default"
       }
+      content={
+        <span className="font-bold text-xs px-2 py-1">
+          {CampaignInfo.data.state}
+        </span>
+      }
+      showOutline={false}
+      variant="shadow"
     >
       <Card id="campaign">
         {/* Campaign Info: Name, Deadline, Goal */}
@@ -37,17 +45,12 @@ export default function CampaignCard(props: { campaign: CampaignUTxO; hasActions
             <span id="deadline">{`${CampaignInfo.data.deadline.toDateString()} ${CampaignInfo.data.deadline.toLocaleTimeString()}`}</span>
           </p>
           <Slider
-            label="Goal"
-            showTooltip={CampaignInfo.data.state !== "Finished"}
-            tooltipProps={{
-              content: Intl.NumberFormat(navigator.languages, { style: "currency", currency: "ADA" }).format(CampaignInfo.data.support.ada),
-              placement: "bottom",
-              offset: 1.5,
-            }}
+            className="mt-4 mb-2"
             formatOptions={{ style: "currency", currency: "ADA" }}
-            value={CampaignInfo.data.goal} // goal
+            label="Goal"
             maxValue={
-              CampaignInfo.data.state === "Finished" || CampaignInfo.data.support.ada > CampaignInfo.data.goal
+              CampaignInfo.data.state === "Finished" ||
+              CampaignInfo.data.support.ada > CampaignInfo.data.goal
                 ? CampaignInfo.data.goal
                 : CampaignInfo.data.support.ada > 0
                   ? CampaignInfo.data.goal ** 2 / CampaignInfo.data.support.ada
@@ -62,17 +65,31 @@ export default function CampaignCard(props: { campaign: CampaignUTxO; hasActions
                 <label className="text-3xl drop-shadow">🔥</label>
               </div>
             )}
-            className="mt-4 mb-2"
+            showTooltip={CampaignInfo.data.state !== "Finished"}
+            tooltipProps={{
+              content: Intl.NumberFormat(navigator.languages, {
+                style: "currency",
+                currency: "ADA",
+              }).format(CampaignInfo.data.support.ada),
+              placement: "bottom",
+              offset: 1.5,
+            }}
+            value={CampaignInfo.data.goal} // goal
           />
         </CardHeader>
 
         {/* Campaign ID */}
         <Divider />
         <CardBody>
-          <label htmlFor="campaign-id" className="text-sm mt-2">
+          <label className="text-sm mt-2" htmlFor="campaign-id">
             Campaign ID:
           </label>
-          <Snippet id="campaign-id" hideSymbol variant="bordered" className="border-none">
+          <Snippet
+            hideSymbol
+            className="border-none"
+            id="campaign-id"
+            variant="bordered"
+          >
             {CampaignInfo.id}
           </Snippet>
         </CardBody>
@@ -81,7 +98,9 @@ export default function CampaignCard(props: { campaign: CampaignUTxO; hasActions
         {hasActions && (
           <>
             <Divider />
-            <CardFooter className="flex justify-end">{actionButtons}</CardFooter>
+            <CardFooter className="flex justify-end">
+              {actionButtons}
+            </CardFooter>
           </>
         )}
       </Card>

@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
-import { useWallet } from "../../contexts/wallet/WalletContext";
-import { CampaignUTxO } from "../../contexts/campaign/CampaignContext";
-import { hackCampaign } from "../../crowdfunding";
-
 import { Button } from "@nextui-org/button";
 import { Checkbox } from "@nextui-org/checkbox";
 import { Input } from "@nextui-org/input";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/modal";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  useDisclosure,
+} from "@nextui-org/modal";
 import { Spinner } from "@nextui-org/spinner";
 import { Address, RewardAddress } from "@lucid-evolution/lucid";
 import { Divider } from "@nextui-org/divider";
 import { Tooltip } from "@nextui-org/tooltip";
+
+import { hackCampaign } from "../../crowdfunding";
+import { CampaignUTxO } from "../../contexts/campaign/CampaignContext";
+import { useWallet } from "../../contexts/wallet/WalletContext";
 
 export default function ButtonHackRerunCampaign(props: {
   campaign: CampaignUTxO;
@@ -26,8 +33,13 @@ export default function ButtonHackRerunCampaign(props: {
     if (!isOpen) resetStates();
   }, [isOpen]);
 
-  const [constr, setConstr] = useState<{ yes: boolean; index?: number }>({ yes: false });
-  const [addSigner, setAddSigner] = useState<{ yes: boolean; address?: Address | RewardAddress }>({ yes: false });
+  const [constr, setConstr] = useState<{ yes: boolean; index?: number }>({
+    yes: false,
+  });
+  const [addSigner, setAddSigner] = useState<{
+    yes: boolean;
+    address?: Address | RewardAddress;
+  }>({ yes: false });
 
   const [isSubmittingTx, setIsSubmittingTx] = useState(false);
 
@@ -39,23 +51,25 @@ export default function ButtonHackRerunCampaign(props: {
 
   return (
     <>
-      <Button onPress={onOpen} color="primary" variant="shadow">
+      <Button color="primary" variant="shadow" onPress={onOpen}>
         Rerun Campaign
       </Button>
 
       <Modal
         backdrop="blur"
         hideCloseButton={isSubmittingTx}
-        isKeyboardDismissDisabled={isSubmittingTx}
         isDismissable={false}
+        isKeyboardDismissDisabled={isSubmittingTx}
         isOpen={isOpen}
-        onOpenChange={onOpenChange}
         placement="top-center"
+        onOpenChange={onOpenChange}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">Rerun Campaign</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                Rerun Campaign
+              </ModalHeader>
               <ModalBody>
                 {/* Redeemer Index */}
                 <div className="flex flex-col gap-1">
@@ -64,14 +78,21 @@ export default function ButtonHackRerunCampaign(props: {
                     <Checkbox
                       isDisabled={isSubmittingTx}
                       isSelected={constr.yes}
-                      onValueChange={(isSelected) => setConstr((constr) => ({ ...constr, yes: isSelected }))}
+                      onValueChange={(isSelected) =>
+                        setConstr((constr) => ({ ...constr, yes: isSelected }))
+                      }
                     />
                     <Input
                       id="constr-index"
+                      isDisabled={isSubmittingTx || !constr.yes}
                       label="Index"
                       variant="bordered"
-                      isDisabled={isSubmittingTx || !constr.yes}
-                      onValueChange={(value) => setConstr((constr) => ({ ...constr, index: value ? parseInt(value) : undefined }))}
+                      onValueChange={(value) =>
+                        setConstr((constr) => ({
+                          ...constr,
+                          index: value ? parseInt(value) : undefined,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -85,14 +106,30 @@ export default function ButtonHackRerunCampaign(props: {
                     <Checkbox
                       isDisabled={isSubmittingTx}
                       isSelected={addSigner.yes}
-                      onValueChange={(isSelected) => setAddSigner((addSigner) => ({ ...addSigner, yes: isSelected }))}
+                      onValueChange={(isSelected) =>
+                        setAddSigner((addSigner) => ({
+                          ...addSigner,
+                          yes: isSelected,
+                        }))
+                      }
                     />
-                    <Tooltip id="signer-address" content="Set Address to Empty to use your address." color="primary" placement="right" showArrow>
+                    <Tooltip
+                      showArrow
+                      color="primary"
+                      content="Set Address to Empty to use your address."
+                      id="signer-address"
+                      placement="right"
+                    >
                       <Input
+                        isDisabled={isSubmittingTx || !addSigner.yes}
                         label="Address or Reward Address"
                         variant="bordered"
-                        isDisabled={isSubmittingTx || !addSigner.yes}
-                        onValueChange={(address) => setAddSigner((addSigner) => ({ ...addSigner, address }))}
+                        onValueChange={(address) =>
+                          setAddSigner((addSigner) => ({
+                            ...addSigner,
+                            address,
+                          }))
+                        }
                       />
                     </Tooltip>
                   </div>
@@ -101,7 +138,12 @@ export default function ButtonHackRerunCampaign(props: {
               <ModalFooter>
                 {/* Cancel Button */}
                 <div className="relative">
-                  <Button onPress={onClose} isDisabled={isSubmittingTx} color="danger" variant="flat">
+                  <Button
+                    color="danger"
+                    isDisabled={isSubmittingTx}
+                    variant="flat"
+                    onPress={onClose}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -109,20 +151,26 @@ export default function ButtonHackRerunCampaign(props: {
                 {/* Submit Button */}
                 <div className="relative">
                   <Button
+                    className={isSubmittingTx ? "invisible" : ""}
+                    color="primary"
+                    variant="shadow"
                     onPress={() => {
                       setIsSubmittingTx(true);
-                      hackCampaign(walletConnection, { action: "rerun", params: { constr, addSigner } }, campaign)
+                      hackCampaign(
+                        walletConnection,
+                        { action: "rerun", params: { constr, addSigner } },
+                        campaign,
+                      )
                         .then(onSuccess)
                         .catch(onError)
                         .finally(onClose);
                     }}
-                    className={isSubmittingTx ? "invisible" : ""}
-                    color="primary"
-                    variant="shadow"
                   >
                     Submit
                   </Button>
-                  {isSubmittingTx && <Spinner className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
+                  {isSubmittingTx && (
+                    <Spinner className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                  )}
                 </div>
               </ModalFooter>
             </>

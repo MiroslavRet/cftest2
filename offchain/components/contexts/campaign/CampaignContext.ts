@@ -1,6 +1,17 @@
 import { createContext, Dispatch, useContext } from "react";
+import {
+  Address,
+  Credential,
+  Lovelace,
+  OutRef,
+  PaymentKeyHash,
+  PolicyId,
+  StakeKeyHash,
+  Unit,
+  UTxO,
+  Validator,
+} from "@lucid-evolution/lucid";
 
-import { Address, Credential, Lovelace, OutRef, PaymentKeyHash, PolicyId, StakeKeyHash, Unit, UTxO, Validator } from "@lucid-evolution/lucid";
 import { CampaignDatum, CampaignState } from "@/types/crowdfunding";
 
 export type Support = { lovelace: Lovelace; ada: number };
@@ -45,5 +56,7 @@ export type CampaignDispatchAction = {
   nextState?: CampaignUTxO;
 };
 
-export const CampaignContext = createContext<[CampaignUTxO | undefined, Dispatch<CampaignDispatchAction>]>([, () => {}]);
+export const CampaignContext = createContext<
+  [CampaignUTxO | undefined, Dispatch<CampaignDispatchAction>]
+>([, () => {}]);
 export const useCampaign = () => useContext(CampaignContext);

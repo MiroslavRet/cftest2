@@ -1,14 +1,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useWallet } from "@/components/contexts/wallet/WalletContext";
-
-import { title } from "@/components/primitives";
 import { Link } from "@nextui-org/link";
-
-import BackerDashboard from "@/components/pages/backer/BackerDashboard";
-
-import DisconnectButton from "@/components/pages/DisconnectButton";
 import { ToastContainer } from "react-toastify";
+
+import { useWallet } from "@/components/contexts/wallet/WalletContext";
+import { title } from "@/components/primitives";
+import BackerDashboard from "@/components/pages/backer/BackerDashboard";
+import DisconnectButton from "@/components/pages/DisconnectButton";
+
 import "react-toastify/dist/ReactToastify.css";
 
 export default function Backer() {
@@ -16,6 +15,7 @@ export default function Backer() {
   const [{ address }] = useWallet();
 
   let isPushed = false;
+
   useEffect(() => {
     if (!address && !isPushed) {
       router.push("/");
@@ -38,7 +38,7 @@ export default function Backer() {
         <Link href="/">&laquo; Go Back</Link>
       </div>
 
-      <ToastContainer theme="dark" position="bottom-right" />
+      <ToastContainer position="bottom-right" theme="dark" />
       <DisconnectButton />
     </>
   );

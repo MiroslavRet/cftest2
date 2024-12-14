@@ -1,7 +1,8 @@
+import ActionButton from "../base/ActionButton";
+
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
 import { CampaignUTxO } from "@/components/contexts/campaign/CampaignContext";
 import { claimNoDatumUTXOs } from "@/components/crowdfunding";
-import ActionButton from "../base/ActionButton";
 
 export default function ButtonClaimAllNoDatumUTXOs(props: {
   campaign: CampaignUTxO;
@@ -15,11 +16,11 @@ export default function ButtonClaimAllNoDatumUTXOs(props: {
   return (
     <ActionButton
       actionLabel="Claim All"
-      campaignAction={() => claimNoDatumUTXOs(walletConnection, campaign)}
-      onSuccess={onSuccess}
-      onError={onError}
       buttonColor="success"
       buttonVariant="shadow"
+      campaignAction={() => claimNoDatumUTXOs(walletConnection, campaign)}
+      onError={onError}
+      onSuccess={onSuccess}
     />
   );
 }

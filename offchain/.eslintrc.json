@@ -27,11 +27,13 @@
     }
   },
   "rules": {
-    "no-console": "warn",
+    "no-console": "off",
     "react/prop-types": "off",
     "react/jsx-uses-react": "off",
     "react/react-in-jsx-scope": "off",
     "react-hooks/exhaustive-deps": "off",
+    "jsx-a11y/no-autofocus": "off",
+    "jsx-a11y/label-has-associated-control": "off",
     "jsx-a11y/click-events-have-key-events": "warn",
     "jsx-a11y/interactive-supports-focus": "warn",
     "prettier/prettier": "warn",
@@ -39,7 +41,7 @@
     "unused-imports/no-unused-vars": "off",
     "unused-imports/no-unused-imports": "warn",
     "@typescript-eslint/no-unused-vars": [
-      "warn",
+      "off",
       {
         "args": "after-used",
         "ignoreRestSiblings": false,
@@ -47,18 +49,9 @@
       }
     ],
     "import/order": [
-      "warn",
+      "off",
       {
-        "groups": [
-          "type",
-          "builtin",
-          "object",
-          "external",
-          "internal",
-          "parent",
-          "sibling",
-          "index"
-        ],
+        "groups": ["type", "builtin", "object", "external", "internal", "parent", "sibling", "index"],
         "pathGroups": [
           {
             "pattern": "~/**",
@@ -71,7 +64,7 @@
     ],
     "react/self-closing-comp": "warn",
     "react/jsx-sort-props": [
-      "warn",
+      "off",
       {
         "callbacksLast": true,
         "shorthandFirst": true,
@@ -80,9 +73,9 @@
       }
     ],
     "padding-line-between-statements": [
-      "warn",
-      {"blankLine": "always", "prev": "*", "next": "return"},
-      {"blankLine": "always", "prev": ["const", "let", "var"], "next": "*"},
+      "off",
+      { "blankLine": "always", "prev": "*", "next": "return" },
+      { "blankLine": "always", "prev": ["const", "let", "var"], "next": "*" },
       {
         "blankLine": "any",
         "prev": ["const", "let", "var"],

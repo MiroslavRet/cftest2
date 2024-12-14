@@ -1,8 +1,9 @@
 import { useWallet } from "../../contexts/wallet/WalletContext";
 import { CampaignUTxO } from "../../contexts/campaign/CampaignContext";
 import { finishCampaign } from "../../crowdfunding";
-import { Platform } from "@/types/platform";
 import ActionButton from "../base/ActionButton";
+
+import { Platform } from "@/types/platform";
 
 export default function ButtonFinishCampaign(props: {
   platform?: Platform;
@@ -17,11 +18,13 @@ export default function ButtonFinishCampaign(props: {
   return (
     <ActionButton
       actionLabel="Finish Campaign"
-      campaignAction={() => finishCampaign(walletConnection, campaign, platform)}
-      onSuccess={onSuccess}
-      onError={onError}
       buttonColor="success"
       buttonVariant="shadow"
+      campaignAction={() =>
+        finishCampaign(walletConnection, campaign, platform)
+      }
+      onError={onError}
+      onSuccess={onSuccess}
     />
   );
 }

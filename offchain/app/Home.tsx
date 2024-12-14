@@ -1,14 +1,15 @@
 import { useEffect } from "react";
+
 import { useWallet } from "@/components/contexts/wallet/WalletContext";
 import { title, subtitle } from "@/components/primitives";
+
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { Link } from "@nextui-org/link";
-
 import { Lucid } from "@lucid-evolution/lucid";
-import { network, provider } from "@/config/lucid";
 
+import { network, provider } from "@/config/lucid";
 import WalletConnectors from "@/components/pages/home/WalletConnectors";
 import ConnectedDashboard from "@/components/pages/home/ConnectedDashboard";
 import DisconnectButton from "@/components/pages/DisconnectButton";
@@ -18,6 +19,7 @@ export default function Home() {
   const { address } = walletConnection;
 
   let isInit = false;
+
   useEffect(() => {
     if (isInit) return;
     else isInit = true;
@@ -26,7 +28,7 @@ export default function Home() {
       .then((lucid) =>
         setWalletConnection((walletConnection) => {
           return { ...walletConnection, lucid };
-        })
+        }),
       )
       .catch((error) => toast(`${error}`, { type: "error" }));
   }, []);
@@ -36,7 +38,7 @@ export default function Home() {
       <section className="relative flex flex-col items-center justify-center gap-4 py-8 md:py-10">
         <ConnectedDashboard />
         <DisconnectButton />
-        <ToastContainer theme="dark" position="bottom-right" />
+        <ToastContainer position="bottom-right" theme="dark" />
       </section>
     );
 
@@ -58,7 +60,11 @@ export default function Home() {
       <div className="inline-block max-w-xl text-center justify-center">
         <div className={subtitle({ class: "mt-4" })}>
           See the{" "}
-          <Link isExternal className="text-lg lg:text-xl" href="https://developers.cardano.org/showcase/?tags=wallet">
+          <Link
+            isExternal
+            className="text-lg lg:text-xl"
+            href="https://developers.cardano.org/showcase/?tags=wallet"
+          >
             list of wallets
           </Link>{" "}
           built for Cardano
@@ -66,7 +72,7 @@ export default function Home() {
       </div>
 
       {/* Toast */}
-      <ToastContainer theme="dark" position="bottom-right" />
+      <ToastContainer position="bottom-right" theme="dark" />
     </section>
   );
 }

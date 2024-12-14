@@ -1,17 +1,23 @@
 import { useEffect, useState } from "react";
-import { useWallet } from "../../contexts/wallet/WalletContext";
-import { CampaignUTxO } from "../../contexts/campaign/CampaignContext";
-import { hackCampaign } from "../../crowdfunding";
-
 import { Button } from "@nextui-org/button";
 import { Checkbox } from "@nextui-org/checkbox";
 import { Divider } from "@nextui-org/divider";
 import { Input } from "@nextui-org/input";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@nextui-org/modal";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  useDisclosure,
+} from "@nextui-org/modal";
 import { Spinner } from "@nextui-org/spinner";
 import { Tooltip } from "@nextui-org/tooltip";
-
 import { Address, RewardAddress } from "@lucid-evolution/lucid";
+
+import { hackCampaign } from "../../crowdfunding";
+import { CampaignUTxO } from "../../contexts/campaign/CampaignContext";
+import { useWallet } from "../../contexts/wallet/WalletContext";
 
 export default function ButtonHackCancelCampaign(props: {
   campaign: CampaignUTxO;
@@ -29,9 +35,18 @@ export default function ButtonHackCancelCampaign(props: {
 
   const nowMs = new Date().getTime() * 1_000;
 
-  const [validFrom, setValidFrom] = useState<{ yes: boolean; unixTime?: number }>({ yes: false });
-  const [addSigner, setAddSigner] = useState<{ yes: boolean; address?: Address | RewardAddress }>({ yes: false });
-  const [payToContract, setPayToContract] = useState<{ yes: boolean; address?: string }>({ yes: false });
+  const [validFrom, setValidFrom] = useState<{
+    yes: boolean;
+    unixTime?: number;
+  }>({ yes: false });
+  const [addSigner, setAddSigner] = useState<{
+    yes: boolean;
+    address?: Address | RewardAddress;
+  }>({ yes: false });
+  const [payToContract, setPayToContract] = useState<{
+    yes: boolean;
+    address?: string;
+  }>({ yes: false });
 
   const [isSubmittingTx, setIsSubmittingTx] = useState(false);
 
@@ -44,23 +59,25 @@ export default function ButtonHackCancelCampaign(props: {
 
   return (
     <>
-      <Button onPress={onOpen} color="danger" variant="flat">
+      <Button color="danger" variant="flat" onPress={onOpen}>
         Cancel Campaign
       </Button>
 
       <Modal
         backdrop="blur"
         hideCloseButton={isSubmittingTx}
-        isKeyboardDismissDisabled={isSubmittingTx}
         isDismissable={false}
+        isKeyboardDismissDisabled={isSubmittingTx}
         isOpen={isOpen}
-        onOpenChange={onOpenChange}
         placement="top-center"
+        onOpenChange={onOpenChange}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">Cancel Campaign</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                Cancel Campaign
+              </ModalHeader>
               <ModalBody>
                 {/* Valid From */}
                 <div className="flex flex-col gap-1">
@@ -72,17 +89,30 @@ export default function ButtonHackCancelCampaign(props: {
                       onValueChange={(isSelected) =>
                         setValidFrom((validFrom) => ({
                           yes: isSelected,
-                          unixTime: isSelected ? (validFrom.unixTime ?? nowMs) : undefined,
+                          unixTime: isSelected
+                            ? (validFrom.unixTime ?? nowMs)
+                            : undefined,
                         }))
                       }
                     />
-                    <Tooltip id="unix-time" content="Set UNIX Time to 0 to use the latest block time." color="primary" placement="right" showArrow>
+                    <Tooltip
+                      showArrow
+                      color="primary"
+                      content="Set UNIX Time to 0 to use the latest block time."
+                      id="unix-time"
+                      placement="right"
+                    >
                       <Input
-                        label="UNIX Time"
-                        variant="bordered"
                         isDisabled={isSubmittingTx || !validFrom.yes}
+                        label="UNIX Time"
                         placeholder={`${nowMs}`}
-                        onValueChange={(value) => setValidFrom((validFrom) => ({ ...validFrom, unixTime: parseInt(value) }))}
+                        variant="bordered"
+                        onValueChange={(value) =>
+                          setValidFrom((validFrom) => ({
+                            ...validFrom,
+                            unixTime: parseInt(value),
+                          }))
+                        }
                       />
                     </Tooltip>
                   </div>
@@ -97,14 +127,30 @@ export default function ButtonHackCancelCampaign(props: {
                     <Checkbox
                       isDisabled={isSubmittingTx}
                       isSelected={addSigner.yes}
-                      onValueChange={(isSelected) => setAddSigner((addSigner) => ({ ...addSigner, yes: isSelected }))}
+                      onValueChange={(isSelected) =>
+                        setAddSigner((addSigner) => ({
+                          ...addSigner,
+                          yes: isSelected,
+                        }))
+                      }
                     />
-                    <Tooltip id="signer-address" content="Set Address to Empty to use your address." color="primary" placement="right" showArrow>
+                    <Tooltip
+                      showArrow
+                      color="primary"
+                      content="Set Address to Empty to use your address."
+                      id="signer-address"
+                      placement="right"
+                    >
                       <Input
+                        isDisabled={isSubmittingTx || !addSigner.yes}
                         label="Address or Reward Address"
                         variant="bordered"
-                        isDisabled={isSubmittingTx || !addSigner.yes}
-                        onValueChange={(address) => setAddSigner((addSigner) => ({ ...addSigner, address }))}
+                        onValueChange={(address) =>
+                          setAddSigner((addSigner) => ({
+                            ...addSigner,
+                            address,
+                          }))
+                        }
                       />
                     </Tooltip>
                   </div>
@@ -114,21 +160,37 @@ export default function ButtonHackCancelCampaign(props: {
 
                 {/* Pay to Contract */}
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="contract-address" className="flex gap-1">
+                  <label className="flex gap-1" htmlFor="contract-address">
                     Resend STATE_TOKEN?
                   </label>
                   <div className="flex gap-1">
                     <Checkbox
                       isDisabled={isSubmittingTx}
                       isSelected={payToContract.yes}
-                      onValueChange={(isSelected) => setPayToContract((payToContract) => ({ ...payToContract, yes: isSelected }))}
+                      onValueChange={(isSelected) =>
+                        setPayToContract((payToContract) => ({
+                          ...payToContract,
+                          yes: isSelected,
+                        }))
+                      }
                     />
-                    <Tooltip id="contract-address" content="Set Address to Empty to use your address." color="primary" placement="right" showArrow>
+                    <Tooltip
+                      showArrow
+                      color="primary"
+                      content="Set Address to Empty to use your address."
+                      id="contract-address"
+                      placement="right"
+                    >
                       <Input
+                        isDisabled={isSubmittingTx || !payToContract.yes}
                         label="To Address"
                         variant="bordered"
-                        isDisabled={isSubmittingTx || !payToContract.yes}
-                        onValueChange={(address) => setPayToContract((payToContract) => ({ ...payToContract, address }))}
+                        onValueChange={(address) =>
+                          setPayToContract((payToContract) => ({
+                            ...payToContract,
+                            address,
+                          }))
+                        }
                       />
                     </Tooltip>
                   </div>
@@ -137,7 +199,12 @@ export default function ButtonHackCancelCampaign(props: {
               <ModalFooter>
                 {/* Cancel Button */}
                 <div className="relative">
-                  <Button onPress={onClose} isDisabled={isSubmittingTx} color="danger" variant="flat">
+                  <Button
+                    color="danger"
+                    isDisabled={isSubmittingTx}
+                    variant="flat"
+                    onPress={onClose}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -145,20 +212,29 @@ export default function ButtonHackCancelCampaign(props: {
                 {/* Submit Button */}
                 <div className="relative">
                   <Button
+                    className={isSubmittingTx ? "invisible" : ""}
+                    color="primary"
+                    variant="shadow"
                     onPress={() => {
                       setIsSubmittingTx(true);
-                      hackCampaign(walletConnection, { action: "cancel", params: { validFrom, addSigner, payToContract } }, campaign)
+                      hackCampaign(
+                        walletConnection,
+                        {
+                          action: "cancel",
+                          params: { validFrom, addSigner, payToContract },
+                        },
+                        campaign,
+                      )
                         .then(onSuccess)
                         .catch(onError)
                         .finally(onClose);
                     }}
-                    className={isSubmittingTx ? "invisible" : ""}
-                    color="primary"
-                    variant="shadow"
                   >
                     Submit
                   </Button>
-                  {isSubmittingTx && <Spinner className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
+                  {isSubmittingTx && (
+                    <Spinner className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                  )}
                 </div>
               </ModalFooter>
             </>

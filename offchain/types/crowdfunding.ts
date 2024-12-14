@@ -3,12 +3,18 @@ import { Constr, Data, TLiteral } from "@lucid-evolution/lucid";
 //#region Alias
 export const PaymentKeyHashSchema = Data.Bytes();
 export const StakeKeyHashSchema = Data.Bytes();
-export const AddressSchema = Data.Tuple([PaymentKeyHashSchema, StakeKeyHashSchema]);
+export const AddressSchema = Data.Tuple([
+  PaymentKeyHashSchema,
+  StakeKeyHashSchema,
+]);
 //#endregion
 
 //#region Enum
 export type CampaignState = "Running" | "Cancelled" | "Finished";
-export const CampaignState: Record<CampaignState, { Title: CampaignState; Schema: TLiteral<CampaignState>; Constr: Constr<[]> }> = {
+export const CampaignState: Record<
+  CampaignState,
+  { Title: CampaignState; Schema: TLiteral<CampaignState>; Constr: Constr<[]> }
+> = {
   Running: {
     Title: "Running",
     Schema: Data.Literal("Running"),
@@ -25,7 +31,11 @@ export const CampaignState: Record<CampaignState, { Title: CampaignState; Schema
     Constr: new Constr(2, []),
   },
 };
-export const CampaignStateSchema = Data.Enum([CampaignState.Running.Schema, CampaignState.Cancelled.Schema, CampaignState.Finished.Schema]);
+export const CampaignStateSchema = Data.Enum([
+  CampaignState.Running.Schema,
+  CampaignState.Cancelled.Schema,
+  CampaignState.Finished.Schema,
+]);
 //#endregion
 
 //#region Datum

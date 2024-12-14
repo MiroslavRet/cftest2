@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
-import { useWallet } from "@/components/contexts/wallet/WalletContext";
-import { handleError } from "@/components/utils";
-
 import { Spinner } from "@nextui-org/spinner";
 import { Snippet } from "@nextui-org/snippet";
 import { Button } from "@nextui-org/button";
-
 import { paymentCredentialOf, stakeCredentialOf } from "@lucid-evolution/lucid";
-import { Wallet } from "@/types/cardano";
 import { Skeleton } from "@nextui-org/skeleton";
+
+import { Wallet } from "@/types/cardano";
+import { handleError } from "@/components/utils";
+import { useWallet } from "@/components/contexts/wallet/WalletContext";
 
 export default function WalletConnectors() {
   const [walletConnection, setWalletConnection] = useWallet();
@@ -17,6 +16,7 @@ export default function WalletConnectors() {
   const [wallets, setWallets] = useState<Wallet[]>();
 
   let isInit = false;
+
   useEffect(() => {
     if (isInit) return;
     else isInit = true;
@@ -24,8 +24,10 @@ export default function WalletConnectors() {
     const wallets: Wallet[] = [];
 
     const { cardano } = window;
+
     for (const c in cardano) {
       const wallet = cardano[c];
+
       if (!wallet.apiVersion) continue;
       wallets.push(wallet);
     }
@@ -41,6 +43,7 @@ export default function WalletConnectors() {
       if (!lucid) throw "Uninitialized Lucid!!!";
 
       const api = await wallet.enable();
+
       lucid.selectWallet.fromAPI(api);
 
       const address = await lucid.wallet().address();
@@ -74,8 +77,19 @@ export default function WalletConnectors() {
   return (
     <div className="flex flex-col gap-4 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6">
       {wallets.map((wallet, w) => (
-        <Skeleton key={`wallet.${w}`} isLoaded={!!lucid} className="rounded-full">
-          <Button onPress={() => onConnectWallet(wallet)} color="primary" radius="full" variant="shadow" className="capitalize" fullWidth>
+        <Skeleton
+          key={`wallet.${w}`}
+          className="rounded-full"
+          isLoaded={!!lucid}
+        >
+          <Button
+            fullWidth
+            className="capitalize"
+            color="primary"
+            radius="full"
+            variant="shadow"
+            onPress={() => onConnectWallet(wallet)}
+          >
             {wallet.name}
           </Button>
         </Skeleton>
