@@ -3,14 +3,14 @@ use cardano/address
 use cardano/transaction.{InlineDatum}
 use crowdfunding
 use crowdfunding/types.{CampaignDatum, Cancel, Cancelled, Finished, Running}
-use tests/constants.{
-  campaign_address, campaign_nonce, campaign_state_o_ref, campaign_state_token,
-  creator_address, creator_address_from_tuple, creator_pkh, now, platform_pkh,
-}
-use tx_util/builder/txn.{
+use test_kit/tx.{
   add_asset_to_tx_output, add_signatory, add_tx_input, add_tx_output,
   set_datum_of_tx_input, set_datum_of_tx_output, set_validity_range,
   with_asset_of_tx_input,
+}
+use tests/constants.{
+  campaign_address, campaign_nonce, campaign_state_o_ref, campaign_state_token,
+  creator_address, creator_address_from_tuple, creator_pkh, now, platform_pkh,
 }
 
 // ## Positive Tests
@@ -30,12 +30,12 @@ test cancel_campaign_positive_signed_by_creator() {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -72,12 +72,12 @@ test cancel_campaign_positive_signed_by_platform() {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -116,12 +116,12 @@ test cancel_campaign_negative_no_signer() fail {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -157,12 +157,12 @@ test cancel_campaign_negative_platform_cancel_before_deadline() fail {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -200,12 +200,12 @@ test cancel_campaign_negative_platform_cancel_without_validty_range() fail {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -243,12 +243,12 @@ test cancel_campaign_negative_rename_campaign() fail {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -285,12 +285,12 @@ test cancel_campaign_negative_change_goal() fail {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -327,12 +327,12 @@ test cancel_campaign_negative_change_deadline() fail {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -373,12 +373,12 @@ test cancel_campaign_negative_change_creator() fail {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -414,14 +414,12 @@ test cancel_campaign_negative_resend_campaign_state_token_to_different_stake_acc
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(
-      campaign_address |> address.with_delegation_key(#"badb0b"),
-    )
+    tx.new_tx_output(campaign_address |> address.with_delegation_key(#"badb0b"))
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
@@ -457,12 +455,12 @@ test cancel_campaign_negative_does_not_resend_campaign_datum() fail {
 
   //   let target_datum: Data = target_state
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address) //   |> set_datum_of_tx_output(target_datum |> InlineDatum)
+    tx.new_tx_output(campaign_address) //   |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 
   let tx =
@@ -497,15 +495,15 @@ test cancel_campaign_negative_does_not_resend_campaign_state_token() fail {
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output_1 =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
   let tx_output_2 =
-    txn.new_tx_output(creator_address_from_tuple)
+    tx.new_tx_output(creator_address_from_tuple)
       |> add_asset_to_tx_output(campaign_state_token)
 
   let tx =
@@ -541,12 +539,12 @@ test cancel_campaign_negative_change_state_from_finished_to_cancelled_instead_of
   let target_datum: Data = target_state
 
   let tx_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(initial_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_output =
-    txn.new_tx_output(campaign_address)
+    tx.new_tx_output(campaign_address)
       |> set_datum_of_tx_output(target_datum |> InlineDatum)
       |> add_asset_to_tx_output(campaign_state_token)
 

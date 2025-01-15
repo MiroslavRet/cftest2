@@ -172,7 +172,6 @@ export async function createCampaign(
 
   if (!lucid.wallet()) {
     const api = await wallet.enable();
-
     lucid.selectWallet.fromAPI(api);
   }
 
@@ -223,7 +222,7 @@ export async function createCampaign(
     .attach.MintingPolicy(campaignValidator)
     .pay.ToContract(campaignAddress, { kind: "inline", value: mintRedeemer }, StateToken)
     .validFrom(now)
-    .complete();
+    .complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
 
@@ -283,7 +282,6 @@ export async function cancelCampaign({ lucid, wallet }: WalletConnection, campai
 
   if (!lucid.wallet()) {
     const api = await wallet.enable();
-
     lucid.selectWallet.fromAPI(api);
   }
 
@@ -306,7 +304,7 @@ export async function cancelCampaign({ lucid, wallet }: WalletConnection, campai
   }
   //#endregion
 
-  const tx = await newTx.complete();
+  const tx = await newTx.complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
 
@@ -349,11 +347,10 @@ export async function supportCampaign(
 
   if (!lucid.wallet()) {
     const api = await wallet.enable();
-
     lucid.selectWallet.fromAPI(api);
   }
 
-  const tx = await lucid.newTx().pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { lovelace }).complete();
+  const tx = await lucid.newTx().pay.ToContract(CampaignInfo.address, { kind: "inline", value: datum }, { lovelace }).complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
 
@@ -410,7 +407,6 @@ export async function finishCampaign({ lucid, wallet }: WalletConnection, campai
 
   if (!lucid.wallet()) {
     const api = await wallet.enable();
-
     lucid.selectWallet.fromAPI(api);
   }
 
@@ -436,7 +432,7 @@ export async function finishCampaign({ lucid, wallet }: WalletConnection, campai
   }
   //#endregion
 
-  const tx = await newTx.complete();
+  const tx = await newTx.complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
 
@@ -478,7 +474,6 @@ export async function refundCampaign({ lucid, wallet, address }: WalletConnectio
 
   if (!lucid.wallet()) {
     const api = await wallet.enable();
-
     lucid.selectWallet.fromAPI(api);
   }
 
@@ -495,7 +490,7 @@ export async function refundCampaign({ lucid, wallet, address }: WalletConnectio
     newTx = newTx.pay.ToAddress(address, { lovelace: support.lovelace }); // TxOutput: Send support back
   }
 
-  const tx = await newTx.complete();
+  const tx = await newTx.complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
 
@@ -526,7 +521,6 @@ export async function claimNoDatumUTXOs({ lucid, wallet, address }: WalletConnec
 
   if (!lucid.wallet()) {
     const api = await wallet.enable();
-
     lucid.selectWallet.fromAPI(api);
   }
 
@@ -536,7 +530,7 @@ export async function claimNoDatumUTXOs({ lucid, wallet, address }: WalletConnec
     .collectFrom(utxo ? [utxo] : CampaignInfo.data.noDatum, Data.void())
     .attach.SpendingValidator(CampaignInfo.validator)
     .addSigner(address)
-    .complete();
+    .complete({ localUPLCEval: false });
 
   const txHash = await submitTx(tx);
 
@@ -574,7 +568,6 @@ export async function hackCampaign(
 
   if (!lucid.wallet()) {
     const api = await wallet.enable();
-
     lucid.selectWallet.fromAPI(api);
   }
 
@@ -603,7 +596,7 @@ export async function hackCampaign(
         newTx = newTx.validFrom(validFrom.unixTime || (await koios.getBlockTimeMs()));
       }
 
-      const tx = await newTx.complete();
+      const tx = await newTx.complete({ localUPLCEval: false });
 
       const txHash = await submitTx(tx);
 
@@ -651,7 +644,7 @@ export async function hackCampaign(
         newTx = newTx.addSigner(addSigner.address || address);
       }
 
-      const tx = await newTx.complete();
+      const tx = await newTx.complete({ localUPLCEval: false });
 
       const txHash = await submitTx(tx);
 
@@ -697,7 +690,7 @@ export async function hackCampaign(
         }
       }
 
-      const tx = await newTx.complete();
+      const tx = await newTx.complete({ localUPLCEval: false });
 
       const txHash = await submitTx(tx);
 
@@ -736,7 +729,7 @@ export async function hackCampaign(
         newTx = newTx.addSigner(addSigner.address || address);
       }
 
-      const tx = await newTx.complete();
+      const tx = await newTx.complete({ localUPLCEval: false });
 
       const txHash = await submitTx(tx);
 
@@ -771,7 +764,7 @@ export async function hackCampaign(
         newTx = newTx.addSigner(addSigner.address || address);
       }
 
-      const tx = await newTx.complete();
+      const tx = await newTx.complete({ localUPLCEval: false });
 
       const txHash = await submitTx(tx);
 

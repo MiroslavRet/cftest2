@@ -7,13 +7,13 @@ version = "2.2.0"
 source = "github"
 
 [[requirements]]
-name = "aiken-extra/time_util"
-version = "5.220.202412"
+name = "aiken-lang/fuzz"
+version = "2.1.0"
 source = "github"
 
 [[requirements]]
-name = "aiken-extra/tx_util"
-version = "2.220.202412"
+name = "aiken-extra/test_kit"
+version = "helium"
 source = "github"
 
 [[packages]]
@@ -23,15 +23,16 @@ requirements = []
 source = "github"
 
 [[packages]]
-name = "aiken-extra/time_util"
-version = "5.220.202412"
+name = "aiken-lang/fuzz"
+version = "2.1.0"
 requirements = []
 source = "github"
 
 [[packages]]
-name = "aiken-extra/tx_util"
-version = "2.220.202412"
+name = "aiken-extra/test_kit"
+version = "helium"
 requirements = []
 source = "github"
 
 [etags]
+"aiken-extra/test_kit@helium" = [{ secs_since_epoch = 1736946501, nanos_since_epoch = 901631029 }, "8aeaede15f69f88f8eacc139d29696e0d7860b0e198debb21cdf082234d49d56"]

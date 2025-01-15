@@ -5,13 +5,13 @@ use crowdfunding
 use crowdfunding/types.{
   CampaignDatum, Cancel, Cancelled, Finish, Finished, Refund, Running,
 }
+use test_kit/tx.{
+  add_asset_to_tx_output, add_signatory, add_tx_input, add_tx_output,
+  add_tx_ref_input, set_datum_of_tx_input, with_asset_of_tx_input,
+}
 use tests/constants.{
   campaign_address, campaign_nonce, campaign_state_o_ref, campaign_state_token,
   creator_address, creator_pkh, platform_address, platform_pkh,
-}
-use tx_util/builder/txn.{
-  add_asset_to_tx_output, add_signatory, add_tx_input, add_tx_output,
-  add_tx_ref_input, set_datum_of_tx_input, with_asset_of_tx_input,
 }
 
 // ## Positive Tests
@@ -30,16 +30,16 @@ test no_datum_positive_cancelled_campaign() {
   let no_datum_o_ref = OutputReference("NO_DATUM_OREF_TxHash", 0)
 
   let tx_ref_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(campaign_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_input =
-    txn.new_tx_input(no_datum_o_ref, campaign_address)
+    tx.new_tx_input(no_datum_o_ref, campaign_address)
       |> with_asset_of_tx_input(assets.from_lovelace(500_000_000))
 
   let tx_output =
-    txn.new_tx_output(platform_address)
+    tx.new_tx_output(platform_address)
       |> add_asset_to_tx_output(assets.from_lovelace(500_000_000))
 
   let tx =
@@ -75,16 +75,16 @@ test no_datum_positive_finished_campaign() {
   let no_datum_o_ref = OutputReference("NO_DATUM_OREF_TxHash", 0)
 
   let tx_ref_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(campaign_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_input =
-    txn.new_tx_input(no_datum_o_ref, campaign_address)
+    tx.new_tx_input(no_datum_o_ref, campaign_address)
       |> with_asset_of_tx_input(assets.from_lovelace(500_000_000))
 
   let tx_output =
-    txn.new_tx_output(platform_address)
+    tx.new_tx_output(platform_address)
       |> add_asset_to_tx_output(assets.from_lovelace(500_000_000))
 
   let tx =
@@ -122,16 +122,16 @@ test no_datum_negative_running_campaign() fail {
   let no_datum_o_ref = OutputReference("NO_DATUM_OREF_TxHash", 0)
 
   let tx_ref_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(campaign_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_input =
-    txn.new_tx_input(no_datum_o_ref, campaign_address)
+    tx.new_tx_input(no_datum_o_ref, campaign_address)
       |> with_asset_of_tx_input(assets.from_lovelace(500_000_000))
 
   let tx_output =
-    txn.new_tx_output(platform_address)
+    tx.new_tx_output(platform_address)
       |> add_asset_to_tx_output(assets.from_lovelace(500_000_000))
 
   let tx =
@@ -167,16 +167,16 @@ test no_datum_negative_no_campaign_state_token_in_reference_input() fail {
   let no_datum_o_ref = OutputReference("NO_DATUM_OREF_TxHash", 0)
 
   let tx_ref_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(campaign_datum |> InlineDatum)
 
   //   |> with_asset_of_tx_input(campaign_state_token)
   let tx_input =
-    txn.new_tx_input(no_datum_o_ref, campaign_address)
+    tx.new_tx_input(no_datum_o_ref, campaign_address)
       |> with_asset_of_tx_input(assets.from_lovelace(500_000_000))
 
   let tx_output =
-    txn.new_tx_output(platform_address)
+    tx.new_tx_output(platform_address)
       |> add_asset_to_tx_output(assets.from_lovelace(500_000_000))
 
   let tx =
@@ -212,15 +212,15 @@ test no_datum_negative_does_not_refer_state_token_utxo() fail {
   let no_datum_o_ref = OutputReference("NO_DATUM_OREF_TxHash", 0)
 
   //   let tx_ref_input =
-  //     txn.new_tx_input(campaign_state_o_ref, campaign_address)
+  //     tx.new_tx_input(campaign_state_o_ref, campaign_address)
   //       |> set_datum_of_tx_input(campaign_datum |> InlineDatum)
   //       |> with_asset_of_tx_input(campaign_state_token)
   let tx_input =
-    txn.new_tx_input(no_datum_o_ref, campaign_address)
+    tx.new_tx_input(no_datum_o_ref, campaign_address)
       |> with_asset_of_tx_input(assets.from_lovelace(500_000_000))
 
   let tx_output =
-    txn.new_tx_output(platform_address)
+    tx.new_tx_output(platform_address)
       |> add_asset_to_tx_output(assets.from_lovelace(500_000_000))
 
   let tx =
@@ -255,16 +255,16 @@ test no_datum_negative_not_signed_by_platform() fail {
   let no_datum_o_ref = OutputReference("NO_DATUM_OREF_TxHash", 0)
 
   let tx_ref_input =
-    txn.new_tx_input(campaign_state_o_ref, campaign_address)
+    tx.new_tx_input(campaign_state_o_ref, campaign_address)
       |> set_datum_of_tx_input(campaign_datum |> InlineDatum)
       |> with_asset_of_tx_input(campaign_state_token)
 
   let tx_input =
-    txn.new_tx_input(no_datum_o_ref, campaign_address)
+    tx.new_tx_input(no_datum_o_ref, campaign_address)
       |> with_asset_of_tx_input(assets.from_lovelace(500_000_000))
 
   let tx_output =
-    txn.new_tx_output(platform_address)
+    tx.new_tx_output(platform_address)
       |> add_asset_to_tx_output(assets.from_lovelace(500_000_000))
 
   let tx =

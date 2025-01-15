@@ -16,13 +16,13 @@ version = "2.2.0"
 source = "github"
 
 [[dependencies]]
-name = "aiken-extra/time_util"
-version = "5.220.202412"
+name = "aiken-lang/fuzz"
+version = "2.1.0"
 source = "github"
 
 [[dependencies]]
-name = "aiken-extra/tx_util"
-version = "2.220.202412"
+name = "aiken-extra/test_kit"
+version = "helium"
 source = "github"
 
 [config.default]

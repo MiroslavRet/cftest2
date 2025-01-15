@@ -25,7 +25,6 @@ export function handleError(error: any) {
     try {
       const errorString = JSON.stringify(error);
       const errorJSON = JSON.parse(errorString);
-
       return errorJSON;
     } catch {
       return {};
@@ -36,12 +35,18 @@ export function handleError(error: any) {
   const { failure } = cause ?? {};
 
   const failureCause = failure?.cause;
+
+  let failureTrace: string | undefined;
+  try {
+    failureTrace = eval(failureCause).replaceAll(" Trace ", " \n ");
+  } catch {
+    failureTrace = undefined;
+  }
+
   const failureInfo = failureCause?.info;
   const failureMessage = failureCause?.message;
 
-  toast(`${failureInfo ?? failureMessage ?? info ?? message ?? error}`, {
-    type: "error",
-  });
+  toast(`${failureTrace ?? failureInfo ?? failureMessage ?? info ?? message ?? error}`, { type: "error" });
   console.error(failureCause ?? { error });
 }
 

@@ -12,7 +12,7 @@ use crowdfunding/types.{
   Finished, Refund, Running,
 }
 use crowdfunding/utils
-use time_util/unsafe/bound as unsafe_unwrap
+use test_kit/time/unwrap
 
 /// Validates the following action:
 /// - Create campaign
@@ -87,7 +87,7 @@ fn validate_create_campaign(
     campaign_datum
   expect creator == pkh
   expect goal > 0
-  expect unsafe_unwrap.finite_start_of(tx.validity_range) < deadline
+  expect unwrap.finite_start_of(tx.validity_range) < deadline
   and {
     must_consume_creator_nonce(tx, creator, nonce)?,
     must_mint_state_token(tx, self_script)?,
@@ -186,7 +186,7 @@ fn must_be_signed_by(tx: Transaction, signer: VerificationKeyHash) -> Bool {
 
 fn must_be_after_deadline(tx: Transaction, deadline: Int) -> Bool {
   // tx validFrom is after or at deadline
-  (unsafe_unwrap.finite_start_of(tx.validity_range) >= deadline)?
+  (unwrap.finite_start_of(tx.validity_range) >= deadline)?
 }
 
 fn must_reach_goal_and_send_to_creator(
