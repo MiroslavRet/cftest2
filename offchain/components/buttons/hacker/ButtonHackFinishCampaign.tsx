@@ -61,7 +61,7 @@ export default function ButtonHackFinishCampaign(props: {
   return (
     <>
       <Button color="success" variant="shadow" onPress={onOpen}>
-        Fnish Campaign
+        Finish Campaign
       </Button>
 
       <Modal
