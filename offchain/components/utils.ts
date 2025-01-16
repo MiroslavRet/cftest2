@@ -20,34 +20,63 @@ export function handleSuccess(success: any) {
 
 export function handleError(error: any) {
   const { info, message } = error;
+  const errorMessage = `${message}`;
 
-  function toJSON(error: any) {
-    try {
-      const errorString = JSON.stringify(error);
-      const errorJSON = JSON.parse(errorString);
-      return errorJSON;
-    } catch {
-      return {};
-    }
-  }
-
-  const { cause } = toJSON(error);
-  const { failure } = cause ?? {};
-
-  const failureCause = failure?.cause;
-
-  let failureTrace: string | undefined;
   try {
-    failureTrace = eval(failureCause).replaceAll(" Trace ", " \n ");
+    // KoiosError:
+    const a = errorMessage.indexOf("{", 1);
+    const b =
+      errorMessage.lastIndexOf("}", errorMessage.lastIndexOf("}") - 1) + 1;
+
+    const rpc = errorMessage.slice(a, b);
+    const jsonrpc = JSON.parse(rpc);
+
+    const errorData = jsonrpc.error.data[0].error.data;
+    try {
+      const { validationError, traces } = errorData;
+
+      toast(`${validationError} Traces: ${traces.join(", ")}.`, {
+        type: "error",
+      });
+      console.error({ [validationError]: traces });
+    } catch {
+      const { reason } = errorData;
+
+      toast(`${reason}`, { type: "error" });
+      console.error(reason);
+    }
   } catch {
-    failureTrace = undefined;
+    function toJSON(error: any) {
+      try {
+        const errorString = JSON.stringify(error);
+        const errorJSON = JSON.parse(errorString);
+        return errorJSON;
+      } catch {
+        return {};
+      }
+    }
+
+    const { cause } = toJSON(error);
+    const { failure } = cause ?? {};
+
+    const failureCause = failure?.cause;
+
+    let failureTrace: string | undefined;
+    try {
+      failureTrace = eval(failureCause).replaceAll(" Trace ", " \n ");
+    } catch {
+      failureTrace = undefined;
+    }
+
+    const failureInfo = failureCause?.info;
+    const failureMessage = failureCause?.message;
+
+    toast(
+      `${failureTrace ?? failureInfo ?? failureMessage ?? info ?? message ?? error}`,
+      { type: "error" },
+    );
+    console.error(failureCause ?? { error });
   }
-
-  const failureInfo = failureCause?.info;
-  const failureMessage = failureCause?.message;
-
-  toast(`${failureTrace ?? failureInfo ?? failureMessage ?? info ?? message ?? error}`, { type: "error" });
-  console.error(failureCause ?? { error });
 }
 
 export function adaToLovelace(float: string) {
